@@ -6,7 +6,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.media.MediaPlayer;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.LayoutInflater;
@@ -15,6 +14,9 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import dif.clogic.other.Accompaniment;
+import dif.clogic.other.AccompanimentAdapter;
+import dif.clogic.other.DbOpenHelper;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,7 +34,7 @@ public class AccompanimentListActivity extends Activity {
 
     private ListView listView;
     private Button addButton;
-    private ArrayList<Song> accompanimentList;
+    private ArrayList<Accompaniment> accompanimentList;
     private DbOpenHelper mDbOpenHelper;
     private MediaPlayer mPlayer = null;
 
@@ -43,8 +45,8 @@ public class AccompanimentListActivity extends Activity {
 
         setTitle("반주 리스트");
 
-        accompanimentList = new ArrayList<Song>();
-        final SongAdapter songAdapter = new SongAdapter(this, R.layout.row, accompanimentList);
+        accompanimentList = new ArrayList<Accompaniment>();
+        final AccompanimentAdapter accompanimentAdapter = new AccompanimentAdapter(this, R.layout.row, accompanimentList);
 
         mDbOpenHelper = new DbOpenHelper(AccompanimentListActivity.this);
         try {
@@ -56,7 +58,6 @@ public class AccompanimentListActivity extends Activity {
         String ext = Environment.getExternalStorageState();
         if(ext.equals(Environment.MEDIA_MOUNTED)) {
             findFolder();
-        } else {
         }
 
         addButton = (Button)findViewById(R.id.addAccompanimentBtn);
@@ -67,13 +68,12 @@ public class AccompanimentListActivity extends Activity {
                 //To change body of implemented methods use File | Settings | File Templates.
                 // go to drawActivity!!
                 Intent intent = new Intent(AccompanimentListActivity.this, AccompanimentActivity.class);
-                intent.putExtra("isMelody", false);
                 startActivity(intent);
             }
         });
 
         listView = (ListView)findViewById(R.id.accompanimentListView);
-        listView.setAdapter(songAdapter);
+        listView.setAdapter(accompanimentAdapter);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -111,13 +111,13 @@ public class AccompanimentListActivity extends Activity {
                             mPlayer.start();
                         }
 
-                        if (data[i].equals("악보 보기")) {
+                        /*if (data[i].equals("악보 보기")) {
 
                             //Cursor cursor = mDbOpenHelper.getMatchName("example");
-                            String params = Song.convert(accompanimentList.get(which).originRecord);
+                            String params = Accompaniment.convert(accompanimentList.get(which).originRecord);
                             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://druzicofclogic.appspot.com/melody/view/" + params)); // CN5 같은 쿼리 보내주기~~
                             startActivity(intent);
-                        }
+                        }*/
 
                         if(data[i].equals("이름 바꾸기")) {
 
@@ -129,7 +129,6 @@ public class AccompanimentListActivity extends Activity {
                                         @Override
                                         public void onClick(DialogInterface dialogInterface, int i) {
                                             //To change body of implemented methods use File | Settings | File Templates.
-
                                             String beforeText = accompanimentList.get(which).Name;
 
                                             EditText editText = (EditText)v.findViewById(R.id.fileName);
@@ -137,7 +136,7 @@ public class AccompanimentListActivity extends Activity {
 
                                             accompanimentList.get(which).Name = afterText;
 
-                                            mDbOpenHelper.updateColumn(accompanimentList.get(which).Id, accompanimentList.get(which).Name, Song.convert(accompanimentList.get(which).originRecord), accompanimentList.get(which).IsMelody);
+                                            mDbOpenHelper.updateAccompanimentColumn(accompanimentList.get(which).Id, accompanimentList.get(which).Name, Accompaniment.convert(accompanimentList.get(which).originRecord));
                                         }
                                     })
                                     .setNegativeButton("취소", null);
@@ -147,8 +146,6 @@ public class AccompanimentListActivity extends Activity {
 
                         if(data[i].equals("삭제")) {
 
-                            String alertTitle = getResources().getString(R.string.app_name);
-
                             AlertDialog.Builder builder = new AlertDialog.Builder(AccompanimentListActivity.this)
                                     .setTitle("DRUZIC")
                                     .setMessage("정말로 삭제하시겠습니까?")
@@ -156,8 +153,8 @@ public class AccompanimentListActivity extends Activity {
                                         @Override
                                         public void onClick(DialogInterface dialog, int which) {
 
+                                            mDbOpenHelper.deleteAccompanimentColumn(accompanimentList.get(which).Id);
                                             accompanimentList.remove(which);
-                                            mDbOpenHelper.deleteColumn(accompanimentList.get(which).Id);
                                         }
                                     });
                             builder.setNegativeButton("취소", null);
@@ -175,12 +172,11 @@ public class AccompanimentListActivity extends Activity {
     private void findFolder() {
         Cursor cursor = mDbOpenHelper.getAllColumns();
         while(cursor.moveToNext()) {
-            if(!(cursor.getInt(cursor.getColumnIndex("ismelody")) > 0))
-                accompanimentList.add(new Song(
-                        cursor.getInt(cursor.getColumnIndex("_id")),
-                        cursor.getString(cursor.getColumnIndex("name")),
-                        cursor.getString(cursor.getColumnIndex("originrecord")),
-                        cursor.getInt(cursor.getColumnIndex("ismelody")) > 0));
+            Accompaniment song = new Accompaniment(cursor.getInt(cursor.getColumnIndex("_id")),
+                    cursor.getString(cursor.getColumnIndex("name")),
+                    cursor.getString(cursor.getColumnIndex("originrecord")));
+
+            accompanimentList.add(song);
         }
     }
 }

@@ -4,10 +4,13 @@ import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.util.SparseBooleanArray;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
+import dif.clogic.other.AccompanimentAdapter;
+import dif.clogic.other.DbOpenHelper;
+import dif.clogic.other.Accompaniment;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -23,7 +26,7 @@ public class CheckboxListViewActivity extends Activity {
 
     private ListView listView;
     private Button button;
-    private ArrayList<Song> accompanimentList;
+    private ArrayList<Accompaniment> accompanimentList;
     private DbOpenHelper mDbOpenHelper;
 
     public void onCreate(Bundle savedInstanceState) {
@@ -35,7 +38,7 @@ public class CheckboxListViewActivity extends Activity {
         listView = (ListView)findViewById(R.id.accompanimentListView);
         button = (Button)findViewById(R.id.addAccompanimentBtn);
 
-        accompanimentList = new ArrayList<Song>();
+        accompanimentList = new ArrayList<Accompaniment>();
 
         mDbOpenHelper = new DbOpenHelper(CheckboxListViewActivity.this);
         try {
@@ -43,41 +46,43 @@ public class CheckboxListViewActivity extends Activity {
         } catch (SQLException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
+
         Cursor cursor = mDbOpenHelper.getAllColumns();
         while(cursor.moveToNext()) {
-            if(!(cursor.getInt(cursor.getColumnIndex("ismelody")) > 0))
-                accompanimentList.add(new Song(
-                        cursor.getInt(cursor.getColumnIndex("_id")),
-                        cursor.getString(cursor.getColumnIndex("name")),
-                        cursor.getString(cursor.getColumnIndex("originrecord")),
-                        cursor.getInt(cursor.getColumnIndex("ismelody")) > 0));
+            accompanimentList.add(new Accompaniment(
+                    cursor.getInt(cursor.getColumnIndex("_id")),
+                    cursor.getString(cursor.getColumnIndex("name")),
+                    cursor.getString(cursor.getColumnIndex("originrecord"))));
         }
 
-        ArrayList<String> array = new ArrayList<String>();
-        array.add("안녕");
-
-        final SongAdapter adapter = new SongAdapter(this, R.layout.mcrow, accompanimentList);
-        //ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_multiple_choice, array);
+        final AccompanimentAdapter adapter = new AccompanimentAdapter(this, R.layout.mcrow, accompanimentList);
 
         listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
         listView.setAdapter(adapter);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int which, long l) {
+                //To change body of implemented methods use File | Settings | File Templates.
+                listView.setItemChecked(which, !listView.isItemChecked(which));
+            }
+        });
 
         button.setText("멜로디 그리기");
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 //To change body of implemented methods use File | Settings | File Templates.
-
                 ArrayList<String> selectedList = new ArrayList<String>();
-                SparseBooleanArray array = listView.getCheckedItemPositions();
-                long[] test = listView.getCheckedItemIds();
-                for(int i=0; i<array.size(); i++) {
-                    int position = array.keyAt(i);
-                    if(array.valueAt(i))
-                        selectedList.add(adapter.getItem(position).originRecord);
+
+                for(int i=0; i<accompanimentList.size(); i++) {
+                    if(accompanimentList.get(i).checked) {
+                        selectedList.add(adapter.getItem(i).originRecord);
+                    }
                 }
 
                 Intent intent = new Intent(CheckboxListViewActivity.this, MelodyActivity.class);
+                intent.putStringArrayListExtra("recordData", selectedList);
+                // selectedList 보내기
                 startActivity(intent);
 
             }
