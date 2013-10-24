@@ -15,9 +15,7 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
-import dif.clogic.other.AccompanimentAdapter;
-import dif.clogic.other.DbOpenHelper;
-import dif.clogic.other.Accompaniment;
+import dif.clogic.other.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,7 +31,7 @@ import java.util.ArrayList;
  */
 public class MelodyListActivity extends Activity {
 
-    private ArrayList<Accompaniment> melodyList;
+    private ArrayList<Melody> melodyList;
     private MediaPlayer mPlayer = null;
     private DbOpenHelper mDbOpenHelper;
     private Button addButton;
@@ -45,8 +43,8 @@ public class MelodyListActivity extends Activity {
 
         setTitle("멜로디 리스트");
 
-        melodyList = new ArrayList<Accompaniment>();
-        final AccompanimentAdapter accompanimentAdapter = new AccompanimentAdapter(this, R.layout.row, melodyList);
+        melodyList = new ArrayList<Melody>();
+        final MelodyAdapter melodyAdapter = new MelodyAdapter(this, R.layout.row, melodyList);
 
         mDbOpenHelper = new DbOpenHelper(MelodyListActivity.this);
         try {
@@ -57,7 +55,7 @@ public class MelodyListActivity extends Activity {
 
         String ext = Environment.getExternalStorageState();
         if(ext.equals(Environment.MEDIA_MOUNTED)) {
-            //findFolder();
+            findFolder();
         } else {
         }
 
@@ -68,14 +66,13 @@ public class MelodyListActivity extends Activity {
             public void onClick(View view) {
                 //To change body of implemented methods use File | Settings | File Templates.
                 // go to drawActivity!!
-                //Intent intent = new Intent(MelodyListActivity.this, AccompanimentActivity.class);
                 Intent intent = new Intent(MelodyListActivity.this, CheckboxListViewActivity.class);
                 startActivity(intent);
             }
         });
 
         listView = (ListView)findViewById(R.id.accompanimentListView);
-        listView.setAdapter(accompanimentAdapter);
+        listView.setAdapter(melodyAdapter);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -131,9 +128,6 @@ public class MelodyListActivity extends Activity {
                                         @Override
                                         public void onClick(DialogInterface dialogInterface, int i) {
                                             //To change body of implemented methods use File | Settings | File Templates.
-
-                                            String beforeText = melodyList.get(which).Name;
-
                                             EditText editText = (EditText)v.findViewById(R.id.fileName);
                                             String afterText = editText.getText().toString();
 
@@ -156,8 +150,9 @@ public class MelodyListActivity extends Activity {
                                         @Override
                                         public void onClick(DialogInterface dialog, int which) {
 
-                                            //mDbOpenHelper.deleteColumn(melodyList.get(which).Id);
-                                            melodyList.remove(which);
+                                            mDbOpenHelper.deleteMelodyColumn(melodyList.get(which).Id);
+                                            melodyList.remove(melodyAdapter.getItem(which));
+                                            melodyAdapter.notifyDataSetChanged();
                                         }
                                     });
                             builder.setNegativeButton("취소", null);
@@ -173,15 +168,13 @@ public class MelodyListActivity extends Activity {
     }
 
     private void findFolder() {
-        Cursor cursor = mDbOpenHelper.getAllColumns();
+        Cursor cursor = mDbOpenHelper.getAllMelodyColumns();
         while(cursor.moveToNext()) {
-            /*if((cursor.getInt(cursor.getColumnIndex("ismelody")) > 0))
-                melodyList
-                        .add(new Accompaniment(
-                                cursor.getInt(cursor.getColumnIndex("_id")),
-                                cursor.getString(cursor.getColumnIndex("name")),
-                                cursor.getString(cursor.getColumnIndex("originrecord")),
-                                cursor.getInt(cursor.getColumnIndex("ismelody")) > 0));*/
+            melodyList.add(new Melody(
+                    cursor.getInt(cursor.getColumnIndex("_id")),
+                    cursor.getString(cursor.getColumnIndex("name")),
+                    cursor.getString(cursor.getColumnIndex("originrecord")),
+                    cursor.getString(cursor.getColumnIndex("accompanimentlist"))));
         }
     }
 }

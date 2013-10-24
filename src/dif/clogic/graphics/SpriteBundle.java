@@ -1,5 +1,6 @@
 package dif.clogic.graphics;
 
+import javax.microedition.khronos.opengles.GL10;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -19,11 +20,11 @@ public class SpriteBundle {
         spriteList = Collections.synchronizedList(new ArrayList<Sprite>());
     }
 
-    public void draw() {
+    public void draw(GL10 gl) {
         synchronized (spriteList) {
             for(Sprite sprite: spriteList) {
                 if(sprite.getIsEnable() && sprite.getIsVisible()) {
-                    sprite.draw();
+                    sprite.draw(gl);
                 }
             }
         }

@@ -66,17 +66,7 @@ public class AccompanimentActivity extends Activity {
         }
 
         public synchronized boolean onTouchEvent(final MotionEvent event) {
-
-            final boolean[] result = {false};
-            queueEvent(new Runnable() {
-                @Override
-                public void run() {
-                    //To change body of implemented methods use File | Settings | File Templates.
-                    result[0] = renderer.onTouchEvent(event);
-                }
-            });
-
-            return result[0];
+            return renderer.onTouchEvent(event);
         }
 
         public class GLThread extends Thread {

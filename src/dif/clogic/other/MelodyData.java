@@ -14,8 +14,8 @@ public class MelodyData {
     public static final class CreateDB implements BaseColumns {
 
         public static final String NAME = "name";
-        public static final String ORIGINRECORD = "originrecord";
         public static final String ACCOMPANIMENTLIST = "accompanimentlist";
+        public static final String ORIGINRECORD = "originrecord";
         public static final String _TABLENAME = "melodydata";
         public static final String _CREATE =
                 "create table " + _TABLENAME + " ("

@@ -1,6 +1,5 @@
 package dif.clogic.graphics;
 
-import android.content.Context;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import dif.clogic.texture.Texture;
@@ -44,9 +43,12 @@ abstract public class Sprite {
 
     private Animation animation;
 
-    private GL10 gl;
+    public Sprite(Texture tex) {
+        texture = tex;
+        originTexture = texture;
 
-    public Sprite() {
+        width = texture.getBitmap().getWidth();
+        height = texture.getBitmap().getHeight();
 
         x = 360;
         y = 0;
@@ -68,24 +70,7 @@ abstract public class Sprite {
         animation = null;
     }
 
-    @Deprecated
-    public Sprite(GL10 pGl, Context context, int resId) {
-        super();
-        texture = new Texture(pGl, context, resId);
-        originTexture = texture;
-
-        width = texture.getBitmap().getWidth();
-        height = texture.getBitmap().getHeight();
-        gl = pGl;
-    }
-
-    public Sprite(Texture tex) {
-        super();
-        texture = tex;
-        originTexture = texture;
-    }
-
-    public void draw() {
+    public void draw(GL10 gl) {
 
         float[] dummyVertices = new float[] {
                 vertices[0] - anchorX, vertices[1] - anchorY, vertices[2],

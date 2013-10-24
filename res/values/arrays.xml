@@ -1,11 +1,16 @@
 <!--?xml version="1.0" encoding="utf-8"?-->
 <resources>
 
-    <string-array name="data">
+    <!--<string-array name="data">
         <item>"음악 듣기"</item>
         <item>"악보 보기"</item>
         <item>"이름 바꾸기</item>
         <item>"삭제</item>
+    </string-array>-->
+    <string-array name="data">
+        <item>음악 듣기</item>
+        <item>이름 바꾸기</item>
+        <item>삭제</item>
     </string-array>
 
     <string-array name="main">

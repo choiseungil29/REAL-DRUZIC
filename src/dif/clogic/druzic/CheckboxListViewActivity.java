@@ -47,7 +47,7 @@ public class CheckboxListViewActivity extends Activity {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
 
-        Cursor cursor = mDbOpenHelper.getAllColumns();
+        Cursor cursor = mDbOpenHelper.getAllAccompanimentColumns();
         while(cursor.moveToNext()) {
             accompanimentList.add(new Accompaniment(
                     cursor.getInt(cursor.getColumnIndex("_id")),

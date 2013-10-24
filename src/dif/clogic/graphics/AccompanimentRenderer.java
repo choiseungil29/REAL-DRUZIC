@@ -17,6 +17,8 @@ import dif.clogic.other.ChordReference;
 import dif.clogic.other.DbOpenHelper;
 import dif.clogic.other.Sound;
 import dif.clogic.sprite.TouchSprite;
+import dif.clogic.texture.Texture;
+import dif.clogic.texture.TextureCache;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -24,10 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Locale;
+import java.util.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -51,14 +50,14 @@ public class AccompanimentRenderer extends GLRenderer {
     private SoundPool soundPool;
     private HashMap<String, Integer> soundFileTable;
 
-    private ArrayList<Sound> playEndSoundList;
-    private ArrayList<Sound> playSoundList;
+    private List<Sound> playEndSoundList;
+    private List<Sound> playSoundList;
 
     private String record;
 
     private boolean isSaving = false;
 
-    private TouchSprite sprite;
+    private GL10 gl;
 
     public AccompanimentRenderer(Context context, Thread pThread) {
         super(context);
@@ -73,8 +72,8 @@ public class AccompanimentRenderer extends GLRenderer {
 
         soundPool = new SoundPool(256, AudioManager.STREAM_MUSIC, 0);
         soundFileTable = new HashMap<String, Integer>();
-        playEndSoundList = new ArrayList<Sound>();
-        playSoundList = new ArrayList<Sound>();
+        playEndSoundList = Collections.synchronizedList(new ArrayList<Sound>());
+        playSoundList = Collections.synchronizedList(new ArrayList<Sound>());
 
         for(int i=0; i< ChordReference.accompanimentList.length; i++) {
             soundFileTable.put(ChordReference.accompanimentList[i], soundPool.load(context, context.getResources().getIdentifier(ChordReference.accompanimentList[i], "raw", "dif.clogic.druzic"), 0));
@@ -98,6 +97,10 @@ public class AccompanimentRenderer extends GLRenderer {
         //To change body of implemented methods use File | Settings | File Templates.
         spriteBundle = new SpriteBundle();
 
+        for(int i=0; i<11; i++) {
+            String filename = "touch_" + String.format("%02d", i+1);
+            TextureCache.getInstance().addTexture(filename, new Texture(gl, mContext, mContext.getResources().getIdentifier(filename, "drawable", mContext.getPackageName())));
+        }
 
         thread.start();
     }
@@ -112,19 +115,20 @@ public class AccompanimentRenderer extends GLRenderer {
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig eglConfig) {
         super.onSurfaceCreated(gl, eglConfig);
-
+        this.gl = gl;
         this.Initialize(gl);
     }
 
     @Override
     public void onSurfaceChanged(GL10 gl, int w, int h) {
         super.onSurfaceChanged(gl, w, h);
+        this.gl = gl;
     }
 
     @Override
     public void onDrawFrame(GL10 gl) {
         super.onDrawFrame(gl);
-        spriteBundle.draw();
+        spriteBundle.draw(gl);
     }
 
     @Override
@@ -137,10 +141,13 @@ public class AccompanimentRenderer extends GLRenderer {
                 for(int i=0; i<codeSequence.length; i++) { // code package 순서정리..
                     if(event.getY() >= (windowHeight / codeSequence.length * i) &&
                             (event.getY() < windowHeight / codeSequence.length * (i+1))) {
-                        playSoundList.add(new Sound(ChordReference.melodyList2[codeSequence[codeSequence.length - 1 - i]]));
+                        synchronized (playSoundList) {
+                            playSoundList.add(new Sound(ChordReference.melodyList2[codeSequence[codeSequence.length - 1 - i]]));
+                        }
                     }
                 }
 
+                TouchSprite sprite = new TouchSprite();
                 sprite.setPosition(touchPoint.x, touchPoint.y);
                 spriteBundle.addSprite(sprite);
                 return true;
@@ -149,7 +156,9 @@ public class AccompanimentRenderer extends GLRenderer {
             case MotionEvent.ACTION_UP:
                 for(Sound sound : playSoundList) {
                     if(sound.isStart && !sound.isEnd) {
-                        playEndSoundList.add(sound);
+                        synchronized (playEndSoundList) {
+                            playEndSoundList.add(sound);
+                        }
                     }
                 }
                 break;
@@ -192,40 +201,43 @@ public class AccompanimentRenderer extends GLRenderer {
 
             if(beatSequenceIdx%2 == 0) { // 반박자마다 들어감
                 // melody Sequence
-                for(Sound sound : playSoundList) {
-                    if(sound.isEnd)
-                        continue;
+                synchronized (playSoundList) {
+                    for(Sound sound : playSoundList) {
+                        if(sound.isEnd)
+                            continue;
 
-                    sound.isStart = true;
-                    if(!sound.isPlaying) {
-                        sound.streamId = soundPool.play(soundFileTable.get(sound.refName), sound.volume, sound.volume, 0, 0, 1);
-                        sound.isPlaying = true;
-                    } else {
-                        if(sound.beatTerm < 4) {
-                            sound.beatTerm++;
+                        sound.isStart = true;
+                        if(!sound.isPlaying) {
+                            sound.streamId = soundPool.play(soundFileTable.get(sound.refName), sound.volume, sound.volume, 0, 0, 1);
+                            sound.isPlaying = true;
                         } else {
-                            playEndSoundList.add(sound);
+                            if(sound.beatTerm < 4) {
+                                sound.beatTerm++;
+                            } else {
+                                playEndSoundList.add(sound);
+                            }
                         }
                     }
                 }
 
-                ArrayList<Sound> removeList = new ArrayList<Sound>();
-                for(Sound sound : playEndSoundList) {
-                    sound.isPlaying = false;
-                    sound.isEnd = true;
+                synchronized (playEndSoundList) {
+                    ArrayList<Sound> removeList = new ArrayList<Sound>();
+                    for(Sound sound : playEndSoundList) {
+                        sound.isPlaying = false;
+                        sound.isEnd = true;
 
-                    if(sound.volume > 0.0f) {
-                        sound.volume -= 0.24f;
-                        soundPool.setVolume(sound.streamId, sound.volume, sound.volume);
-                    } else {
-                        record += sound.refName.replace("_", "") + "_" + sound.beatTerm + " ";
-                        Log.i("TEST", "record : " + record);
-                        soundPool.stop(sound.streamId);
-                        removeList.add(sound);
+                        if(sound.volume > 0.0f) {
+                            sound.volume -= 0.24f;
+                            soundPool.setVolume(sound.streamId, sound.volume, sound.volume);
+                        } else {
+                            record += sound.refName.replace("_", "") + "_" + sound.beatTerm + " ";
+                            Log.i("TEST", "record : " + record);
+                            soundPool.stop(sound.streamId);
+                            removeList.add(sound);
+                        }
                     }
+                    playEndSoundList.removeAll(removeList);
                 }
-                playEndSoundList.removeAll(removeList);
-
                 if(playEndSoundList.isEmpty()) {
                     record += "R" + " ";
                 }

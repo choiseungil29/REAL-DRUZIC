@@ -4,7 +4,9 @@ import android.content.Context;
 import android.graphics.PointF;
 import android.media.AudioManager;
 import android.media.SoundPool;
+import android.os.Environment;
 import android.view.MotionEvent;
+import com.leff.midi.MidiFile;
 import com.leff.midi.MidiTrack;
 import com.leff.midi.event.meta.Tempo;
 import com.leff.midi.event.meta.TimeSignature;
@@ -12,9 +14,14 @@ import dif.clogic.druzic.AccompanimentSound;
 import dif.clogic.other.ChordReference;
 import dif.clogic.other.DbOpenHelper;
 import dif.clogic.other.Sound;
+import dif.clogic.sprite.TouchSprite;
+import dif.clogic.texture.Texture;
+import dif.clogic.texture.TextureCache;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
+import java.io.File;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -110,6 +117,11 @@ public class MelodyRenderer extends GLRenderer {
         //To change body of implemented methods use File | Settings | File Templates.
         spriteBundle = new SpriteBundle();
 
+        for(int i=0; i<11; i++) {
+            String filename = "touch_" + String.format("%02d", i+1);
+            TextureCache.getInstance().addTexture(filename, new Texture(gl, mContext, mContext.getResources().getIdentifier(filename, "drawable", mContext.getPackageName())));
+        }
+
         thread.start();
     }
 
@@ -137,7 +149,7 @@ public class MelodyRenderer extends GLRenderer {
     public void onDrawFrame(GL10 gl) {
         super.onDrawFrame(gl);
 
-        spriteBundle.draw();
+        spriteBundle.draw(gl);
     }
 
     @Override
@@ -155,6 +167,10 @@ public class MelodyRenderer extends GLRenderer {
                         }
                     }
                 }
+
+                TouchSprite sprite = new TouchSprite();
+                sprite.setPosition(touchPoint.x, touchPoint.y);
+                spriteBundle.addSprite(sprite);
                 return true;
             case MotionEvent.ACTION_MOVE:
                 break;
@@ -284,7 +300,9 @@ public class MelodyRenderer extends GLRenderer {
             accompaniment += str;
             accompaniment = accompaniment + ", ";
         }
-        accompaniment = accompaniment.substring(0, accompaniment.length()-2);
+
+        if(!accompaniment.equals(""))
+            accompaniment = accompaniment.substring(0, accompaniment.length()-2);
         mDbOpenHelper.insertMelodyColumn(filename, record, accompaniment); // recordList를 ,로 구분짓기
         String strlist[] = record.split(" ");
 
@@ -411,6 +429,15 @@ public class MelodyRenderer extends GLRenderer {
                 }
             }
             tracks.add(accompanimentTrack);
+
+            MidiFile midi = new MidiFile(MidiFile.DEFAULT_RESOLUTION, tracks);
+
+            File output = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + filename + ".mid");
+            try {
+                midi.writeToFile(output);
+            } catch (IOException e) {
+                System.err.println(e);
+            }
         }
     }
 }

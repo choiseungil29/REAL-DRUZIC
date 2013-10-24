@@ -1,5 +1,7 @@
 package dif.clogic.texture;
 
+import java.util.HashMap;
+
 /**
  * Created with IntelliJ IDEA.
  * User: choeseung-il
@@ -7,7 +9,7 @@ package dif.clogic.texture;
  * Time: 오후 4:33
  * To change this template use File | Settings | File Templates.
  */
-/*public class TextureCache {
+public class TextureCache {
 
     private static HashMap<String, Texture> textureTable;
     private static TextureCache instance;
@@ -17,7 +19,8 @@ package dif.clogic.texture;
     }
 
     public void addTexture(String name, Texture texture) {
-        textureTable.put(name, texture);
+        if(!textureTable.containsValue(texture))
+            textureTable.put(name, texture);
     }
 
     public Texture getTexture(String name) {
@@ -34,4 +37,3 @@ package dif.clogic.texture;
         return instance;
     }
 }
-*/

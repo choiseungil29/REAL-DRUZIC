@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.LayoutInflater;
@@ -111,13 +112,13 @@ public class AccompanimentListActivity extends Activity {
                             mPlayer.start();
                         }
 
-                        /*if (data[i].equals("악보 보기")) {
+                        if (data[i].equals("악보 보기")) {
 
                             //Cursor cursor = mDbOpenHelper.getMatchName("example");
                             String params = Accompaniment.convert(accompanimentList.get(which).originRecord);
                             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://druzicofclogic.appspot.com/melody/view/" + params)); // CN5 같은 쿼리 보내주기~~
                             startActivity(intent);
-                        }*/
+                        }
 
                         if(data[i].equals("이름 바꾸기")) {
 
@@ -151,10 +152,11 @@ public class AccompanimentListActivity extends Activity {
                                     .setMessage("정말로 삭제하시겠습니까?")
                                     .setPositiveButton("확인", new DialogInterface.OnClickListener() {
                                         @Override
-                                        public void onClick(DialogInterface dialog, int which) {
+                                        public void onClick(DialogInterface dialog, int ii) {
 
                                             mDbOpenHelper.deleteAccompanimentColumn(accompanimentList.get(which).Id);
-                                            accompanimentList.remove(which);
+                                            accompanimentAdapter.remove(accompanimentAdapter.getItem(which));
+                                            accompanimentAdapter.notifyDataSetChanged();
                                         }
                                     });
                             builder.setNegativeButton("취소", null);
@@ -170,7 +172,7 @@ public class AccompanimentListActivity extends Activity {
     }
 
     private void findFolder() {
-        Cursor cursor = mDbOpenHelper.getAllColumns();
+        Cursor cursor = mDbOpenHelper.getAllAccompanimentColumns();
         while(cursor.moveToNext()) {
             Accompaniment song = new Accompaniment(cursor.getInt(cursor.getColumnIndex("_id")),
                     cursor.getString(cursor.getColumnIndex("name")),

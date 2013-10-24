@@ -2,6 +2,7 @@ package dif.clogic.sprite;
 
 import dif.clogic.graphics.Animation;
 import dif.clogic.graphics.Sprite;
+import dif.clogic.texture.TextureCache;
 
 /**
  * Created with IntelliJ IDEA.
@@ -13,16 +14,18 @@ import dif.clogic.graphics.Sprite;
 public class TouchSprite extends Sprite {
 
     public TouchSprite() {
-        //super(TextureCache.getInstance().getTexture("touch_01"));
-
+        super(TextureCache.getInstance().getTexture("touch_01"));
         Animation animation = new Animation();
-        /*for(int i=0; i<11; i++) {
-            animation.addFrameWithTexture(TextureCache.getInstance().getTexture("touch_" + String.format("%0d", i+1)));
-        }*/
+        for(int i=0; i<11; i++) {
+            if(TextureCache.getInstance().isInstance("touch_" + String.format("%02d", i+1)))
+                animation.addFrameWithTexture(TextureCache.getInstance().getTexture("touch_" + String.format("%02d", i+1)));
+        }
         animation.setRepeat(false);
-        animation.setRate(1.0f);
+        animation.setRate(0.4f);
 
         this.setAnimation(animation);
+
+        this.setScale(2.0f, 2.0f);
     }
 
     @Override

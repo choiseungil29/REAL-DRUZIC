@@ -13,12 +13,18 @@ public class Melody {
     public int Id;
     public String Name;
     public String originRecord;
-    public ArrayList<Accompaniment> accompanimentRecordList;
+    public ArrayList<String> accompanimentRecordList;
 
-    public Melody(int id, String name, String record, ArrayList<Accompaniment> accompanimentList) {
+    public Melody(int id, String name, String record, String accompanimentList) {
         Id = id;
         Name = name;
         originRecord = record;
-        accompanimentRecordList = accompanimentList;
+        String[] str = accompanimentList.split(", ");
+        if(str[0].equals("")) {
+        } else {
+            for(String chip : str) {
+                accompanimentRecordList.add(chip);
+            }
+        }
     }
 }

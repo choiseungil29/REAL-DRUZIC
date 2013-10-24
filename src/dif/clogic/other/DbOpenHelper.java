@@ -118,8 +118,12 @@ public class DbOpenHelper {
     }
 
     // Select All
-    public Cursor getAllColumns(){
+    public Cursor getAllAccompanimentColumns(){
         return mDB.query(AccompanimentData.CreateDB._TABLENAME, null, null, null, null, null, null);
+    }
+
+    public Cursor getAllMelodyColumns() {
+        return mDB.query(MelodyData.CreateDB._TABLENAME, null, null, null, null, null, null);
     }
 
     // ID 컬럼 얻어 오기
