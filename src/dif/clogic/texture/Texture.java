@@ -1,4 +1,4 @@
-package dif.clogic.graphics;
+package dif.clogic.texture;
 
 import android.content.Context;
 import android.graphics.Bitmap;

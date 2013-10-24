@@ -1,6 +1,8 @@
 package dif.clogic.graphics;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -11,35 +13,43 @@ import java.util.ArrayList;
  */
 public class SpriteBundle {
 
-    private ArrayList<Sprite> spriteList;
+    private List<Sprite> spriteList;
 
     public SpriteBundle() {
-        spriteList = new ArrayList<Sprite>();
+        spriteList = Collections.synchronizedList(new ArrayList<Sprite>());
     }
 
     public void draw() {
-        for(Sprite sprite: spriteList) {
-            if(sprite.getIsEnable() && sprite.getIsVisible()) {
-                sprite.draw();
+        synchronized (spriteList) {
+            for(Sprite sprite: spriteList) {
+                if(sprite.getIsEnable() && sprite.getIsVisible()) {
+                    sprite.draw();
+                }
             }
         }
     }
 
     public void update(float dt) {
-        for(Sprite sprite : spriteList) {
-            if(sprite.getIsEnable()) {
-                sprite.update(dt);
+        synchronized (spriteList) {
+            for(Sprite sprite : spriteList) {
+                if(sprite.getIsEnable()) {
+                    sprite.update(dt);
+                }
             }
         }
     }
 
-    public void addSprite(Sprite sprite) {
-        if(!spriteList.contains(sprite))
+    public void addSprite(Sprite pSprite) {
+        synchronized (spriteList) {
+            Sprite sprite = pSprite;
             spriteList.add(sprite);
+        }
     }
 
     public void removeSprite(Sprite sprite) {
-        if(spriteList.contains(sprite))
-            spriteList.remove(sprite);
+        synchronized (spriteList) {
+            if(spriteList.contains(sprite))
+                spriteList.remove(sprite);
+        }
     }
 }

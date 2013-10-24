@@ -3,6 +3,7 @@ package dif.clogic.graphics;
 import android.content.Context;
 import android.graphics.PointF;
 import android.graphics.RectF;
+import dif.clogic.texture.Texture;
 
 import javax.microedition.khronos.opengles.GL10;
 import java.nio.ByteBuffer;
@@ -17,6 +18,7 @@ import java.nio.FloatBuffer;
  * To change this template use File | Settings | File Templates.
  */
 abstract public class Sprite {
+    private Texture originTexture;
     private Texture texture;
 
     private float width;
@@ -40,15 +42,11 @@ abstract public class Sprite {
 
     private RectF viewRect;
 
+    private Animation animation;
+
     private GL10 gl;
 
-    public Sprite(GL10 pGl, Context context, int resId) {
-        texture = new Texture(pGl, context, resId);
-
-        gl = pGl;
-
-        width = texture.getBitmap().getWidth();
-        height = texture.getBitmap().getHeight();
+    public Sprite() {
 
         x = 360;
         y = 0;
@@ -66,6 +64,25 @@ abstract public class Sprite {
         setViewRect(viewRect);
 
         textureBuffer = this.getFloatBufferFromFloatArray(textureMapping);
+
+        animation = null;
+    }
+
+    @Deprecated
+    public Sprite(GL10 pGl, Context context, int resId) {
+        super();
+        texture = new Texture(pGl, context, resId);
+        originTexture = texture;
+
+        width = texture.getBitmap().getWidth();
+        height = texture.getBitmap().getHeight();
+        gl = pGl;
+    }
+
+    public Sprite(Texture tex) {
+        super();
+        texture = tex;
+        originTexture = texture;
     }
 
     public void draw() {
@@ -104,7 +121,16 @@ abstract public class Sprite {
         gl.glDisableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
     }
 
-    abstract public void update(float dt);
+    public void update(float dt) {
+        if(animation != null) {
+            animation.update(dt);
+            if(!animation.isEnd()) {
+                texture = animation.getNowFrameTexture();
+            } else {
+                texture = originTexture;
+            }
+        }
+    }
 
     public void setViewRect(RectF rect) {
         vertices = new float[] {
@@ -121,6 +147,14 @@ abstract public class Sprite {
                 rect.right, rect.bottom
         };
         textureBuffer = this.getFloatBufferFromFloatArray(textureMapping);
+    }
+
+    public void setAnimation(Animation pAnimation) {
+        animation = pAnimation;
+    }
+
+    public Animation getAnimation() {
+        return animation;
     }
 
     public RectF getViewRect() {

@@ -8,6 +8,7 @@ import android.view.MotionEvent;
 import com.leff.midi.MidiTrack;
 import com.leff.midi.event.meta.Tempo;
 import com.leff.midi.event.meta.TimeSignature;
+import dif.clogic.druzic.AccompanimentSound;
 import dif.clogic.other.ChordReference;
 import dif.clogic.other.DbOpenHelper;
 import dif.clogic.other.Sound;
@@ -16,10 +17,7 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Locale;
+import java.util.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -43,8 +41,12 @@ public class MelodyRenderer extends GLRenderer {
     private SoundPool soundPool;
     private HashMap<String, Integer> soundFileTable;
 
-    private ArrayList<Sound> playEndSoundList;
-    private ArrayList<Sound> playSoundList;
+    private List<Sound> playEndSoundList;
+    private List<Sound> playSoundList;
+
+    private ArrayList<AccompanimentSound>[] accompanimentList;
+    private ArrayList<AccompanimentSound> accompanimentEndList;
+    private int[] accompanimentListIdx;
 
     private String record;
     private ArrayList<String> recordList;
@@ -63,8 +65,28 @@ public class MelodyRenderer extends GLRenderer {
 
         soundPool = new SoundPool(256, AudioManager.STREAM_MUSIC, 0);
         soundFileTable = new HashMap<String, Integer>();
-        playSoundList = new ArrayList<Sound>();
-        playEndSoundList = new ArrayList<Sound>();
+        playSoundList = Collections.synchronizedList(new ArrayList<Sound>());
+        playEndSoundList = Collections.synchronizedList(new ArrayList<Sound>());
+
+        accompanimentListIdx = new int[recordList.size()];
+        accompanimentList = new ArrayList[recordList.size()];
+        accompanimentEndList = new ArrayList<AccompanimentSound>();
+
+        for(int i=0; i<recordList.size(); i++) {
+            accompanimentListIdx[i] = 0;
+            accompanimentList[i] = new ArrayList<AccompanimentSound>();
+
+            String[] record = recordList.get(i).split(" ");
+            for(int idx=0; idx<record.length; idx++) {
+                String str = record[idx];
+                if(str.equals("R")) {
+                    accompanimentList[i].add(new AccompanimentSound("R", 1));
+                } else {
+                    accompanimentList[i].add(new AccompanimentSound(str.charAt(0) + "_" + (str.charAt(1)-'0'), str.charAt(3)-'0'));
+                }
+            }
+        }
+
 
         for(int i=0; i< ChordReference.accompanimentList.length; i++) {
             soundFileTable.put(ChordReference.accompanimentList[i], soundPool.load(context, context.getResources().getIdentifier(ChordReference.accompanimentList[i], "raw", "dif.clogic.druzic"), 0));
@@ -128,7 +150,9 @@ public class MelodyRenderer extends GLRenderer {
                 for(int i=0; i<codeSequence.length; i++) { // code package 순서정리..
                     if(event.getY() >= (windowHeight / codeSequence.length * i) &&
                             (event.getY() < windowHeight / codeSequence.length * (i+1))) {
-                        playSoundList.add(new Sound(ChordReference.melodyList2[codeSequence[codeSequence.length - 1 - i]]));
+                        synchronized (playSoundList) {
+                            playSoundList.add(new Sound(ChordReference.melodyList2[codeSequence[codeSequence.length - 1 - i]]));
+                        }
                     }
                 }
                 return true;
@@ -136,9 +160,11 @@ public class MelodyRenderer extends GLRenderer {
                 break;
             case MotionEvent.ACTION_UP:
 
-                for(Sound sound : playSoundList) {
-                    if(sound.isStart && !sound.isEnd) {
-                        playEndSoundList.add(sound);
+                synchronized (playSoundList) {
+                    for(Sound sound : playSoundList) {
+                        if(sound.isStart && !sound.isEnd) {
+                            playEndSoundList.add(sound);
+                        }
                     }
                 }
 
@@ -162,38 +188,74 @@ public class MelodyRenderer extends GLRenderer {
 
             if(beatSequenceIdx%2 == 0) { // 반박자마다 들어감
                 // melody Sequence
-                for(Sound sound : playSoundList) {
-                    if(sound.isEnd)
-                        continue;
 
-                    sound.isStart = true;
-                    if(!sound.isPlaying) {
-                        sound.streamId = soundPool.play(soundFileTable.get(sound.refName), sound.volume, sound.volume, 0, 0, 1);
-                        sound.isPlaying = true;
+                for(int i=0; i<accompanimentList.length; i++) {
+                    ArrayList<AccompanimentSound> arrayList = accompanimentList[i];
+                    AccompanimentSound sound = arrayList.get(accompanimentListIdx[i]%arrayList.size());
+
+                    if(sound.refName.equals("R")) {
+                        accompanimentListIdx[i]++;
                     } else {
-                        if(sound.beatTerm < 8) {
+                        if(sound.beatTerm <= 0) {
+                            sound.streamId = soundPool.play(soundFileTable.get(sound.refName), sound.volume, sound.volume, 0, 0, 1);
                             sound.beatTerm++;
+                        } else if(sound.beatTerm < sound.originBeatTerm) {
+                            sound.beatTerm++;
+                        } else {
+                            sound.beatTerm = 0;
+                            accompanimentEndList.add(sound);
+                            accompanimentListIdx[i]++;
                         }
                     }
                 }
 
-                ArrayList<Sound> removeList = new ArrayList<Sound>();
-                for(Sound sound : playEndSoundList) {
-                    sound.isPlaying = false;
-                    sound.isEnd = true;
-
+                ArrayList<AccompanimentSound> accompanimentRemoveList = new ArrayList<AccompanimentSound>();
+                for(AccompanimentSound sound : accompanimentEndList) {
                     if(sound.volume > 0.0f) {
-                        sound.volume -= 0.24f;
+                        sound.volume -= 0.2f;
                         soundPool.setVolume(sound.streamId, sound.volume, sound.volume);
                     } else {
-                        record += sound.refName.replace("_", "") + "_" + sound.beatTerm + " ";
                         soundPool.stop(sound.streamId);
-                        removeList.add(sound);
+                        accompanimentRemoveList.add(sound);
                     }
                 }
-                playEndSoundList.removeAll(removeList);
-                removeList.clear();
+                accompanimentEndList.removeAll(accompanimentRemoveList);
 
+                synchronized (playSoundList) {
+                    for(Sound sound : playSoundList) {
+                        if(sound.isEnd)
+                            continue;
+
+                        sound.isStart = true;
+                        if(!sound.isPlaying) {
+                            sound.streamId = soundPool.play(soundFileTable.get(sound.refName), sound.volume, sound.volume, 0, 0, 1);
+                            sound.isPlaying = true;
+                        } else {
+                            if(sound.beatTerm < 8) {
+                                sound.beatTerm++;
+                            }
+                        }
+                    }
+                }
+
+                synchronized (playEndSoundList) {
+                    ArrayList<Sound> removeList = new ArrayList<Sound>();
+                    for(Sound sound : playEndSoundList) {
+                        sound.isPlaying = false;
+                        sound.isEnd = true;
+
+                        if(sound.volume > 0.0f) {
+                            sound.volume -= 0.24f;
+                            soundPool.setVolume(sound.streamId, sound.volume, sound.volume);
+                        } else {
+                            record += sound.refName.replace("_", "") + "_" + sound.beatTerm + " ";
+                            soundPool.stop(sound.streamId);
+                            removeList.add(sound);
+                        }
+                    }
+                    playEndSoundList.removeAll(removeList);
+                    removeList.clear();
+                }
                 if(playEndSoundList.isEmpty()) {
                     record += "R" + " ";
                 }
@@ -215,6 +277,17 @@ public class MelodyRenderer extends GLRenderer {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
 
+        record = record.substring(0, record.length()-1);
+
+        String accompaniment = "";
+        for(String str : recordList) {
+            accompaniment += str;
+            accompaniment = accompaniment + ", ";
+        }
+        accompaniment = accompaniment.substring(0, accompaniment.length()-2);
+        mDbOpenHelper.insertMelodyColumn(filename, record, accompaniment); // recordList를 ,로 구분짓기
+        String strlist[] = record.split(" ");
+
         ArrayList<MidiTrack> tracks = new ArrayList<MidiTrack>();
 
         MidiTrack tempoTrack = new MidiTrack();
@@ -231,5 +304,113 @@ public class MelodyRenderer extends GLRenderer {
         tracks.add(tempoTrack);
         // 아래는 Accompaniment 구현 후에.
 
+        int melodyLength = 0;
+        MidiTrack noteTrack = new MidiTrack();
+        for(int i=0; i<strlist.length; i++) {
+            if(strlist[i].equals("")) {
+                continue;
+            }
+
+            int channel = 0;
+            int pitch = 0;
+            int velocity = 100;
+
+            String str = strlist[i];
+            switch (str.charAt(0)) {
+
+                case 'c':
+                    pitch = 0;
+                    break;
+                case 'd':
+                    pitch = 2;
+                    break;
+                case 'e':
+                    pitch = 4;
+                    break;
+                case 'f':
+                    pitch = 5;
+                    break;
+                case 'g':
+                    pitch = 7;
+                    break;
+                case 'a':
+                    pitch = 9;
+                    break;
+                case 'b':
+                    pitch = 11;
+                    break;
+                case 'R':
+                    pitch = 0;
+                default:
+                    break;
+            }
+
+            int length = 1; // if 'R', quater beat.
+            if (str.length() > 1) {
+                pitch = pitch + 12 * ((int)str.charAt(1) - '0');
+                length = (int)str.charAt(3) - '0';
+            }
+
+            noteTrack.insertNote(channel, pitch, velocity, melodyLength, length * 120); // 240이면 1박자
+            melodyLength = melodyLength + length * 120;
+        }
+
+        for(int i=0; i<recordList.size(); i++) {
+            MidiTrack accompanimentTrack = new MidiTrack();
+            int measure = beatSequenceIdx;
+            measure = measure - 8;
+            measure = measure + measure%8;
+            measure = measure / 8;
+
+            int everyAllLength = 0;
+            for(int idx=0; idx<measure; idx++) {
+                String[] chip = recordList.get(i).split(" ");
+
+                for(String str : chip) {
+                    int channel = i+1;
+                    int pitch = 0;
+                    int velocity = 80;
+
+                    switch(str.charAt(0)) {
+                        case 'c':
+                            pitch = 0;
+                            break;
+                        case 'd':
+                            pitch = 2;
+                            break;
+                        case 'e':
+                            pitch = 4;
+                            break;
+                        case 'f':
+                            pitch = 5;
+                            break;
+                        case 'g':
+                            pitch = 7;
+                            break;
+                        case 'a':
+                            pitch = 9;
+                            break;
+                        case 'b':
+                            pitch = 11;
+                            break;
+                        case 'R':
+                            pitch = 0;
+                            break;
+                        default:
+                            break;
+                    }
+
+                    int length = 1; // if 'R', quater beat.
+                    if (str.length() > 1) {
+                        pitch = pitch + 12 * ((int)str.charAt(1) - '0');
+                        length = (int)str.charAt(3) - '0';
+                    }
+
+                    accompanimentTrack.insertNote(channel, pitch, velocity, everyAllLength, length * 120);
+                    everyAllLength = everyAllLength + length * 120;
+                }
+            }
+            tracks.add(accompanimentTrack);
+        }
     }
 }

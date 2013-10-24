@@ -16,6 +16,7 @@ import dif.clogic.druzic.MainActivity;
 import dif.clogic.other.ChordReference;
 import dif.clogic.other.DbOpenHelper;
 import dif.clogic.other.Sound;
+import dif.clogic.sprite.TouchSprite;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -57,6 +58,8 @@ public class AccompanimentRenderer extends GLRenderer {
 
     private boolean isSaving = false;
 
+    private TouchSprite sprite;
+
     public AccompanimentRenderer(Context context, Thread pThread) {
         super(context);
         thread = pThread;
@@ -94,6 +97,7 @@ public class AccompanimentRenderer extends GLRenderer {
     public void Initialize(GL10 gl) {
         //To change body of implemented methods use File | Settings | File Templates.
         spriteBundle = new SpriteBundle();
+
 
         thread.start();
     }
@@ -136,6 +140,9 @@ public class AccompanimentRenderer extends GLRenderer {
                         playSoundList.add(new Sound(ChordReference.melodyList2[codeSequence[codeSequence.length - 1 - i]]));
                     }
                 }
+
+                sprite.setPosition(touchPoint.x, touchPoint.y);
+                spriteBundle.addSprite(sprite);
                 return true;
             case MotionEvent.ACTION_MOVE:
                 break;
