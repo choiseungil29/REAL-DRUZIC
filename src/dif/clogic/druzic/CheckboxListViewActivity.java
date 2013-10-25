@@ -82,6 +82,7 @@ public class CheckboxListViewActivity extends Activity {
 
                 Intent intent = new Intent(CheckboxListViewActivity.this, MelodyActivity.class);
                 intent.putStringArrayListExtra("recordData", selectedList);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 // selectedList 보내기
                 startActivity(intent);
 

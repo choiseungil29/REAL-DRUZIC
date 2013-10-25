@@ -129,8 +129,11 @@ public class MelodyRenderer extends GLRenderer {
     public void onDestroy() {
         // 파일 저장 코드
         saveFile();
-
         mDbOpenHelper.close();
+
+        /*Intent intent = new Intent(mContext, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        mContext.startActivity(intent);*/
     }
 
     @Override
@@ -373,71 +376,71 @@ public class MelodyRenderer extends GLRenderer {
             melodyLength = melodyLength + length * 120;
         }
 
+        tracks.add(noteTrack);
+
         for(int i=0; i<recordList.size(); i++) {
             MidiTrack accompanimentTrack = new MidiTrack();
             int measure = beatSequenceIdx;
-            measure = measure - 8;
-            measure = measure + measure%8;
-            measure = measure / 8;
 
+            int idx = 0;
             int everyAllLength = 0;
-            for(int idx=0; idx<measure; idx++) {
+            while(everyAllLength < melodyLength) {
                 String[] chip = recordList.get(i).split(" ");
+                String str = chip[idx%chip.length];
+                int channel = i+1;
+                int pitch = 0;
+                int velocity = 80;
 
-                for(String str : chip) {
-                    int channel = i+1;
-                    int pitch = 0;
-                    int velocity = 80;
-
-                    switch(str.charAt(0)) {
-                        case 'c':
-                            pitch = 0;
-                            break;
-                        case 'd':
-                            pitch = 2;
-                            break;
-                        case 'e':
-                            pitch = 4;
-                            break;
-                        case 'f':
-                            pitch = 5;
-                            break;
-                        case 'g':
-                            pitch = 7;
-                            break;
-                        case 'a':
-                            pitch = 9;
-                            break;
-                        case 'b':
-                            pitch = 11;
-                            break;
-                        case 'R':
-                            pitch = 0;
-                            break;
-                        default:
-                            break;
-                    }
-
-                    int length = 1; // if 'R', quater beat.
-                    if (str.length() > 1) {
-                        pitch = pitch + 12 * ((int)str.charAt(1) - '0');
-                        length = (int)str.charAt(3) - '0';
-                    }
-
-                    accompanimentTrack.insertNote(channel, pitch, velocity, everyAllLength, length * 120);
-                    everyAllLength = everyAllLength + length * 120;
+                switch(str.charAt(0)) {
+                    case 'c':
+                        pitch = 0;
+                        break;
+                    case 'd':
+                        pitch = 2;
+                        break;
+                    case 'e':
+                        pitch = 4;
+                        break;
+                    case 'f':
+                        pitch = 5;
+                        break;
+                    case 'g':
+                        pitch = 7;
+                        break;
+                    case 'a':
+                        pitch = 9;
+                        break;
+                    case 'b':
+                        pitch = 11;
+                        break;
+                    case 'R':
+                        pitch = 0;
+                        break;
+                    default:
+                        break;
                 }
+
+                int length = 1; // if 'R', quater*2 beat.
+                if (str.length() > 1) {
+                    pitch = pitch + 12 * ((int)str.charAt(1) - '0');
+                    length = (int)str.charAt(3) - '0';
+                }
+                if(everyAllLength + length * 120 > melodyLength)
+                    length = 960;
+
+                accompanimentTrack.insertNote(channel, pitch, velocity, everyAllLength, length * 120);
+                everyAllLength = everyAllLength + length * 120;
+                idx++;
             }
             tracks.add(accompanimentTrack);
+        }
 
-            MidiFile midi = new MidiFile(MidiFile.DEFAULT_RESOLUTION, tracks);
-
-            File output = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + filename + ".mid");
-            try {
-                midi.writeToFile(output);
-            } catch (IOException e) {
-                System.err.println(e);
-            }
+        MidiFile midi = new MidiFile(MidiFile.DEFAULT_RESOLUTION, tracks);
+        File output = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + filename + ".mid");
+        try {
+            midi.writeToFile(output);
+        } catch (IOException e) {
+            System.err.println(e);
         }
     }
 }

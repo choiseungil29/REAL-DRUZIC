@@ -19,6 +19,7 @@ public class Melody {
         Id = id;
         Name = name;
         originRecord = record;
+        accompanimentRecordList = new ArrayList<String>();
         String[] str = accompanimentList.split(", ");
         if(str[0].equals("")) {
         } else {
@@ -26,5 +27,14 @@ public class Melody {
                 accompanimentRecordList.add(chip);
             }
         }
+    }
+
+    static public String StringListToString(ArrayList<String> list) {
+        String builder = "";
+        for(String str : list) {
+            builder += str;
+            builder += ", ";
+        }
+        return builder;
     }
 }

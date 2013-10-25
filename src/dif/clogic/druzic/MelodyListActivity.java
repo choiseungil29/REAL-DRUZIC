@@ -32,6 +32,7 @@ import java.util.ArrayList;
 public class MelodyListActivity extends Activity {
 
     private ArrayList<Melody> melodyList;
+    private MelodyAdapter melodyAdapter;
     private MediaPlayer mPlayer = null;
     private DbOpenHelper mDbOpenHelper;
     private Button addButton;
@@ -44,7 +45,7 @@ public class MelodyListActivity extends Activity {
         setTitle("멜로디 리스트");
 
         melodyList = new ArrayList<Melody>();
-        final MelodyAdapter melodyAdapter = new MelodyAdapter(this, R.layout.row, melodyList);
+        melodyAdapter = new MelodyAdapter(this, R.layout.row, melodyList);
 
         mDbOpenHelper = new DbOpenHelper(MelodyListActivity.this);
         try {
@@ -133,7 +134,7 @@ public class MelodyListActivity extends Activity {
 
                                             melodyList.get(which).Name = afterText;
 
-                                            //mDbOpenHelper.updateMelodyColumn(melodyList.get(which).Id, melodyList.get(which).Name, Accompaniment.convert(melodyList.get(which).originRecord), melodyList.get(which).isMelody);
+                                            mDbOpenHelper.updateMelodyColumn(melodyList.get(which).Id, melodyList.get(which).Name, melodyList.get(which).originRecord, Melody.StringListToString(melodyList.get(which).accompanimentRecordList));
                                         }
                                     })
                                     .setNegativeButton("취소", null);
@@ -148,7 +149,7 @@ public class MelodyListActivity extends Activity {
                                     .setMessage("정말로 삭제하시겠습니까?")
                                     .setPositiveButton("확인", new DialogInterface.OnClickListener() {
                                         @Override
-                                        public void onClick(DialogInterface dialog, int which) {
+                                        public void onClick(DialogInterface dialog, int ii) {
 
                                             mDbOpenHelper.deleteMelodyColumn(melodyList.get(which).Id);
                                             melodyList.remove(melodyAdapter.getItem(which));
@@ -167,7 +168,20 @@ public class MelodyListActivity extends Activity {
         });
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        String ext = Environment.getExternalStorageState();
+        if(ext.equals(Environment.MEDIA_MOUNTED)) {
+            findFolder();
+        } else {
+        }
+        melodyAdapter.notifyDataSetChanged();
+    }
+
     private void findFolder() {
+        melodyList.clear();
         Cursor cursor = mDbOpenHelper.getAllMelodyColumns();
         while(cursor.moveToNext()) {
             melodyList.add(new Melody(
