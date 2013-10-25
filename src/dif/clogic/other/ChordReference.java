@@ -17,7 +17,8 @@ public class ChordReference {
     public static final String[] melodyList2 = {
             "c_4", "d_4", "e_4", "f_4", "g_4", "a_4", "b_4",
             "c_5", "d_5", "e_5", "f_5", "g_5", "a_5", "b_5",
-            "c_6"
+            "c_6", "d_6", "e_6", "f_6", "g_6", "a_6", "b_6",
+            "c_7"
     };
 
     public static final String[] accompanimentList = {
@@ -71,20 +72,20 @@ public class ChordReference {
     public static final int[] B = { 3, 6, 11, 15, 18, 23, 27, 30, 35, 39, 42, 47, 51, 54, 59, 63, 66, 71, 75, 78, 83, 87, 90, 95, 99 };
     public static final int[] BM = { 2, 6, 11, 14, 18, 23, 26, 30, 35, 38, 42, 47, 50, 54, 59, 62, 66, 71, 74, 78, 83, 87, 91, 96, 99 };*/
 
-    public static final int[] C = { 0, 4, 7, 12 };
-    public static final int[] CM = { 0, 3, 7, 12 };
-    public static final int[] D = { 2, 6, 9, 14 };
-    public static final int[] DM = { 2, 5, 9, 14 };
-    public static final int[] E = { 4, 8, 11 };
-    public static final int[] EM = { 4, 7, 11 };
-    public static final int[] F = { 0, 5, 9, 12 };
-    public static final int[] FM = {0, 5, 8, 12 };
-    public static final int[] G = { 2, 7, 11, 14 };
-    public static final int[] GM = { 2, 7, 10, 14 };
-    public static final int[] A = { 1, 4, 9, 13 };
-    public static final int[] AM = { 0, 4, 9, 12 };
-    public static final int[] B = { 3, 6, 11 };
-    public static final int[] BM = { 2, 6, 11, 14 };
+    public static final int[] C = { 0, 4, 7, 12, 16, 19 };
+    public static final int[] CM = { 0, 3, 7, 12, 15, 19 };
+    public static final int[] D = { 2, 6, 9, 14, 18, 21 };
+    public static final int[] DM = { 2, 5, 9, 14, 17, 21 };
+    public static final int[] E = { 4, 8, 11, 16, 20 };
+    public static final int[] EM = { 4, 7, 11, 16, 19 };
+    public static final int[] F = { 0, 5, 9, 12, 17, 21 };
+    public static final int[] FM = {0, 5, 8, 12, 17, 20 };
+    public static final int[] G = { 2, 7, 11, 14, 19 };
+    public static final int[] GM = { 2, 7, 10, 14, 19 };
+    public static final int[] A = { 1, 4, 9, 13, 16, 21 };
+    public static final int[] AM = { 0, 4, 9, 12, 16, 21 };
+    public static final int[] B = { 3, 6, 11, 15, 18 };
+    public static final int[] BM = { 2, 6, 11, 14, 18 };
 
     public static final int[][] bluePackage = {C, EM, F, G};
     public static final int[][] redPackage = {C, AM, F, G};

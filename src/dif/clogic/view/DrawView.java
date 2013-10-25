@@ -68,15 +68,15 @@ public class DrawView extends View {
         soundPool = new SoundPool(256, AudioManager.STREAM_MUSIC, 0);
 
         for(int i=0; i<ChordReference.melodyList.length; i++) {
-            soundFileTable.put(ChordReference.melodyList[i], soundPool.load(context, getResources().getIdentifier(ChordReference.melodyList[i], "raw", "dif.clogic.druzic"), 0));
+            soundFileTable.put(ChordReference.melodyList[i], soundPool.load(context, getResources().getIdentifier(ChordReference.melodyList[i], "raw", "dif.clogic.app"), 0));
         }
 
         for(int i=0; i<ChordReference.beatList.length; i++) {
-            soundFileTable.put(ChordReference.beatList[i], soundPool.load(context, getResources().getIdentifier(ChordReference.beatList[i], "raw", "dif.clogic.druzic"), 0));
+            soundFileTable.put(ChordReference.beatList[i], soundPool.load(context, getResources().getIdentifier(ChordReference.beatList[i], "raw", "dif.clogic.app"), 0));
         }
 
         for(int i=0; i<ChordReference.melodyList2.length; i++) {
-            soundFileTable.put(ChordReference.melodyList2[i], soundPool.load(context, getResources().getIdentifier(ChordReference.melodyList2[i], "raw", "dif.clogic.druzic"), 0));
+            soundFileTable.put(ChordReference.melodyList2[i], soundPool.load(context, getResources().getIdentifier(ChordReference.melodyList2[i], "raw", "dif.clogic.app"), 0));
         }
 
         count = System.currentTimeMillis();

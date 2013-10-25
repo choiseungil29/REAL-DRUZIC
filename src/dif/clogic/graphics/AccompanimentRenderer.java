@@ -12,7 +12,7 @@ import com.leff.midi.MidiFile;
 import com.leff.midi.MidiTrack;
 import com.leff.midi.event.meta.Tempo;
 import com.leff.midi.event.meta.TimeSignature;
-import dif.clogic.druzic.MainActivity;
+import dif.clogic.app.MainActivity;
 import dif.clogic.other.ChordReference;
 import dif.clogic.other.DbOpenHelper;
 import dif.clogic.other.Sound;
@@ -76,15 +76,15 @@ public class AccompanimentRenderer extends GLRenderer {
         playSoundList = Collections.synchronizedList(new ArrayList<Sound>());
 
         for(int i=0; i< ChordReference.accompanimentList.length; i++) {
-            soundFileTable.put(ChordReference.accompanimentList[i], soundPool.load(context, context.getResources().getIdentifier(ChordReference.accompanimentList[i], "raw", "dif.clogic.druzic"), 0));
+            soundFileTable.put(ChordReference.accompanimentList[i], soundPool.load(context, context.getResources().getIdentifier(ChordReference.accompanimentList[i], "raw", "dif.clogic.app"), 0));
         }
 
         for(int i=0; i<ChordReference.beatList.length; i++) {
-            soundFileTable.put(ChordReference.beatList[i], soundPool.load(context, context.getResources().getIdentifier(ChordReference.beatList[i], "raw", "dif.clogic.druzic"), 0));
+            soundFileTable.put(ChordReference.beatList[i], soundPool.load(context, context.getResources().getIdentifier(ChordReference.beatList[i], "raw", "dif.clogic.app"), 0));
         }
 
         for(int i=0; i<ChordReference.melodyList2.length; i++) {
-            soundFileTable.put(ChordReference.melodyList2[i], soundPool.load(context, context.getResources().getIdentifier(ChordReference.melodyList2[i], "raw", "dif.clogic.druzic"), 0));
+            soundFileTable.put(ChordReference.melodyList2[i], soundPool.load(context, context.getResources().getIdentifier(ChordReference.melodyList2[i], "raw", "dif.clogic.app"), 0));
         }
 
         record = "";

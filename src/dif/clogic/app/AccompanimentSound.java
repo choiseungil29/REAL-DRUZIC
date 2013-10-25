@@ -1,4 +1,4 @@
-package dif.clogic.druzic;
+package dif.clogic.app;
 
 /**
  * Created with IntelliJ IDEA.

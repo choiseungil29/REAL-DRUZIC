@@ -6,7 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
-import dif.clogic.druzic.R;
+import dif.clogic.app.R;
 
 import java.util.ArrayList;
 

@@ -8,7 +8,7 @@ import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.TextView;
-import dif.clogic.druzic.R;
+import dif.clogic.app.R;
 
 import java.util.ArrayList;
 

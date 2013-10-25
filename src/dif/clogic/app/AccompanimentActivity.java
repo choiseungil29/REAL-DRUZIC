@@ -1,4 +1,4 @@
-package dif.clogic.druzic;
+package dif.clogic.app;
 
 import android.app.Activity;
 import android.content.Context;
