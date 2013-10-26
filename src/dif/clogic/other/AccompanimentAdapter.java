@@ -1,6 +1,7 @@
 package dif.clogic.other;
 
 import android.content.Context;
+import android.graphics.Typeface;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -56,6 +57,7 @@ public class AccompanimentAdapter extends ArrayAdapter<Accompaniment> {
 
             if(text != null) {
                 text.setText(s.Name);
+                text.setTypeface(Typeface.createFromAsset(mCtx.getAssets(), "nanumN.ttf"));
             }
         }
         return v;

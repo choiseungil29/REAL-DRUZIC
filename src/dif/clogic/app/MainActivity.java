@@ -9,8 +9,8 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import dif.clogic.other.MainAdapter;
 
 /**
  * Created with IntelliJ IDEA.
@@ -30,11 +30,12 @@ public class MainActivity extends Activity {
 
         setTitle("DRUZIC - 음악을 그리다");
 
-        final ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, getResources().getStringArray(R.array.main));
+        //final ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.row, getResources().getStringArray(R.array.main));
+        final MainAdapter adapter = new MainAdapter(this, getResources().getStringArray(R.array.main));
 
         listView = (ListView)findViewById(R.id.mainListView);
         listView.setAdapter(adapter);
-
+        listView.setDividerHeight(0);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {

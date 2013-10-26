@@ -12,6 +12,7 @@ import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.*;
+import dif.clogic.custom.CustomProgressBar;
 import dif.clogic.other.Accompaniment;
 import dif.clogic.other.AccompanimentAdapter;
 import dif.clogic.other.DbOpenHelper;
@@ -36,9 +37,9 @@ public class AccompanimentListActivity extends Activity {
     private DbOpenHelper mDbOpenHelper;
     private MediaPlayer mPlayer = null;
 
-    private LinearLayout layout;
-    private SeekBar playerSeekBar;
+    //private SeekBar playerSeekBar;
     private Button playButton;
+    private CustomProgressBar progress;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -46,9 +47,6 @@ public class AccompanimentListActivity extends Activity {
         setContentView(R.layout.accompanimentactivity);
 
         setTitle("반주 리스트");
-
-        layout = (LinearLayout)findViewById(R.id.accompanimentLinearLayout);
-        layout.setVisibility(View.VISIBLE);
 
         playButton = (Button)findViewById(R.id.playButton);
         playButton.setOnClickListener(new View.OnClickListener() {
@@ -68,8 +66,11 @@ public class AccompanimentListActivity extends Activity {
             }
         });
 
-        playerSeekBar = (SeekBar)findViewById(R.id.seekBar);
+        progress = (CustomProgressBar)findViewById(R.id.accompanimentProgress);
+
+        /*playerSeekBar = (SeekBar)findViewById(R.id.seekBar);
         playerSeekBar.setVisibility(ProgressBar.VISIBLE);
+        playerSeekBar.setProgressDrawable(this.getResources().getDrawable(R.drawable.custom_seekbar));
         playerSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
@@ -87,7 +88,7 @@ public class AccompanimentListActivity extends Activity {
                 if (mPlayer != null)
                     mPlayer.seekTo(seekBar.getProgress());
             }
-        });
+        });*/
 
         new Thread(new Runnable() {
             @Override
@@ -98,7 +99,8 @@ public class AccompanimentListActivity extends Activity {
                         continue;
 
                     if(mPlayer.isPlaying())
-                        playerSeekBar.setProgress(mPlayer.getCurrentPosition());
+                        progress.setProgress(mPlayer.getCurrentPosition());
+                        //playerSeekBar.setProgress(mPlayer.getCurrentPosition());
                 }
             }
         }).start();
@@ -133,7 +135,7 @@ public class AccompanimentListActivity extends Activity {
 
         listView = (ListView)findViewById(R.id.accompanimentListView);
         listView.setAdapter(accompanimentAdapter);
-
+        listView.setDividerHeight(0);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, final int which, long l) {
@@ -157,7 +159,8 @@ public class AccompanimentListActivity extends Activity {
                                     @Override
                                     public void onCompletion(MediaPlayer mediaPlayer) {
                                         //To change body of implemented methods use File | Settings | File Templates.
-                                        playerSeekBar.setProgress(0);
+                                        //playerSeekBar.setProgress(0);
+                                        progress.setProgress(0);
                                     }
                                 });
                             } else {
@@ -179,8 +182,10 @@ public class AccompanimentListActivity extends Activity {
 
                             playButton.setText("일시정지");
 
-                            playerSeekBar.setProgress(0);
-                            playerSeekBar.setMax(mPlayer.getDuration());
+                            /*playerSeekBar.setProgress(0);
+                            playerSeekBar.setMax(mPlayer.getDuration());*/
+                            progress.setProgress(0);
+                            progress.setMax(mPlayer.getDuration());
                         }
 
                         if (data[i].equals("악보 보기")) {
@@ -206,6 +211,10 @@ public class AccompanimentListActivity extends Activity {
                                             EditText editText = (EditText)v.findViewById(R.id.fileName);
                                             String afterText = editText.getText().toString();
 
+                                            File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + beforeText + ".mid");
+                                            File to = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + afterText + ".mid");
+                                            file.renameTo(to);
+
                                             accompanimentList.get(which).Name = afterText;
 
                                             mDbOpenHelper.updateAccompanimentColumn(accompanimentList.get(which).Id, accompanimentList.get(which).Name, Accompaniment.convert(accompanimentList.get(which).originRecord));
@@ -224,6 +233,9 @@ public class AccompanimentListActivity extends Activity {
                                     .setPositiveButton("확인", new DialogInterface.OnClickListener() {
                                         @Override
                                         public void onClick(DialogInterface dialog, int ii) {
+
+                                            File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + accompanimentList.get(which).Name + ".mid");
+                                            file.delete();
 
                                             mDbOpenHelper.deleteAccompanimentColumn(accompanimentList.get(which).Id);
                                             accompanimentAdapter.remove(accompanimentAdapter.getItem(which));

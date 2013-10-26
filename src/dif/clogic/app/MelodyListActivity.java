@@ -12,6 +12,7 @@ import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.*;
+import dif.clogic.custom.CustomProgressBar;
 import dif.clogic.other.*;
 
 import java.io.File;
@@ -35,8 +36,10 @@ public class MelodyListActivity extends Activity {
     private Button addButton;
     private ListView listView;
 
-    private SeekBar playerSeekBar;
+    //private SeekBar playerSeekBar;
     private Button playButton;
+
+    private CustomProgressBar progress;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,8 +65,12 @@ public class MelodyListActivity extends Activity {
             }
         });
 
-        playerSeekBar = (SeekBar)findViewById(R.id.melodySeekBar);
+        progress = (CustomProgressBar)findViewById(R.id.melodyProgress);
+
+        /*playerSeekBar = (SeekBar)findViewById(R.id.melodySeekBar);
         playerSeekBar.setVisibility(ProgressBar.VISIBLE);
+        playerSeekBar.setProgressDrawable(this.getResources().getDrawable(R.drawable.custom_seekbar));
+        playerSeekBar.setThumb(this.getResources().getDrawable(R.drawable.thumb));
         playerSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
@@ -81,7 +88,7 @@ public class MelodyListActivity extends Activity {
                 if (mPlayer != null)
                     mPlayer.seekTo(seekBar.getProgress());
             }
-        });
+        });*/
 
         new Thread(new Runnable() {
             @Override
@@ -92,7 +99,8 @@ public class MelodyListActivity extends Activity {
                         continue;
 
                     if(mPlayer.isPlaying())
-                        playerSeekBar.setProgress(mPlayer.getCurrentPosition());
+                        progress.setProgress(mPlayer.getCurrentPosition());
+                        //playerSeekBar.setProgress(mPlayer.getCurrentPosition());
                 }
             }
         }).start();
@@ -127,7 +135,7 @@ public class MelodyListActivity extends Activity {
 
         listView = (ListView)findViewById(R.id.accompanimentListView);
         listView.setAdapter(melodyAdapter);
-
+        listView.setDividerHeight(0);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, final int which, long l) {
@@ -150,7 +158,8 @@ public class MelodyListActivity extends Activity {
                                     @Override
                                     public void onCompletion(MediaPlayer mediaPlayer) {
                                         //To change body of implemented methods use File | Settings | File Templates.
-                                        playerSeekBar.setProgress(0);
+                                        //playerSeekBar.setProgress(0);
+                                        progress.setProgress(0);
                                     }
                                 });
                             } else {
@@ -172,8 +181,10 @@ public class MelodyListActivity extends Activity {
 
                             playButton.setText("일시정지");
 
-                            playerSeekBar.setProgress(0);
-                            playerSeekBar.setMax(mPlayer.getDuration());
+                            /*playerSeekBar.setProgress(0);
+                            playerSeekBar.setMax(mPlayer.getDuration());*/
+                            progress.setProgress(0);
+                            progress.setMax(mPlayer.getDuration());
                         }
 
                         if (data[i].equals("악보 보기")) {
@@ -194,8 +205,14 @@ public class MelodyListActivity extends Activity {
                                         @Override
                                         public void onClick(DialogInterface dialogInterface, int i) {
                                             //To change body of implemented methods use File | Settings | File Templates.
+                                            String beforeText = melodyList.get(which).Name;
+
                                             EditText editText = (EditText)v.findViewById(R.id.fileName);
                                             String afterText = editText.getText().toString();
+
+                                            File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + beforeText + ".mid");
+                                            File to = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + afterText + ".mid");
+                                            file.renameTo(to);
 
                                             melodyList.get(which).Name = afterText;
 
@@ -215,6 +232,9 @@ public class MelodyListActivity extends Activity {
                                     .setPositiveButton("확인", new DialogInterface.OnClickListener() {
                                         @Override
                                         public void onClick(DialogInterface dialog, int ii) {
+
+                                            File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + melodyList.get(which).Name + ".mid");
+                                            file.delete();
 
                                             mDbOpenHelper.deleteMelodyColumn(melodyList.get(which).Id);
                                             melodyList.remove(melodyAdapter.getItem(which));

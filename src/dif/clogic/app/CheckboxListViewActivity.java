@@ -7,11 +7,10 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.ListView;
+import dif.clogic.other.Accompaniment;
 import dif.clogic.other.AccompanimentAdapter;
 import dif.clogic.other.DbOpenHelper;
-import dif.clogic.other.Accompaniment;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -29,16 +28,12 @@ public class CheckboxListViewActivity extends Activity {
     private Button button;
     private ArrayList<Accompaniment> accompanimentList;
     private DbOpenHelper mDbOpenHelper;
-    private LinearLayout layout;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.accompanimentactivity);
 
         setTitle("반주 설정하기");
-
-        layout = (LinearLayout)findViewById(R.id.accompanimentLinearLayout);
-        layout.setVisibility(View.INVISIBLE);
 
         listView = (ListView)findViewById(R.id.accompanimentListView);
         button = (Button)findViewById(R.id.addAccompanimentBtn);
@@ -64,6 +59,7 @@ public class CheckboxListViewActivity extends Activity {
 
         listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
         listView.setAdapter(adapter);
+        listView.setDividerHeight(0);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int which, long l) {

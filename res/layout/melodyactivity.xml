@@ -3,27 +3,9 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:orientation="vertical"
               android:layout_width="match_parent"
-              android:layout_height="match_parent" android:id="@+id/melodyLinearLayout">
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                  android:layout_width="match_parent"
-                  android:layout_height="30dip">
-
-        <SeekBar
-                android:layout_width="0dip"
-                android:layout_height="wrap_content"
-                android:id="@+id/melodySeekBar"
-                android:layout_alignParentLeft="true"
-                android:layout_alignParentTop="true"
-                android:layout_weight="8"/>
-        <Button
-                android:layout_width="0dip"
-                android:layout_height="wrap_content"
-                android:text="재생"
-                android:id="@+id/melodyPlayButton"
-                android:layout_alignParentRight="true" android:layout_alignTop="@+id/seekBar"
-                android:layout_alignParentLeft="false" android:singleLine="true" android:textSize="9dip"
-                android:layout_gravity="center" android:layout_weight="2"/>
-    </LinearLayout>
+              android:layout_height="match_parent"
+              android:id="@+id/melodyLinearLayout"
+              android:background="#FFFFFF">
 
     <ListView
             android:layout_width="fill_parent"
@@ -35,4 +17,30 @@
             android:text="New Button"
             android:id="@+id/addAccompanimentBtn" android:layout_gravity="left|center_vertical" android:layout_marginTop="0dp"
             android:layout_weight="1"/>
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                  android:layout_width="match_parent"
+                  android:layout_height="15dip">
+
+        <view class="dif.clogic.custom.CustomProgressBar" android:id="@+id/melodyProgress"
+                                         android:layout_width="match_parent"
+                                         android:layout_height="wrap_content"
+                                         android:layout_gravity="center_horizontal|bottom"/>
+        <!--<SeekBar
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:id="@+id/melodySeekBar"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentTop="true"
+                android:layout_weight="8" android:layout_marginLeft="0dp" android:layout_gravity="center_vertical"
+                android:thumb="@drawable/thumb"/>-->
+
+        <Button
+                android:layout_width="0dip"
+                android:layout_height="wrap_content"
+                android:text="재생"
+                android:id="@+id/melodyPlayButton"
+                android:layout_alignParentRight="true" android:layout_alignTop="@+id/seekBar"
+                android:layout_alignParentLeft="false" android:singleLine="true" android:textSize="9dip"
+                android:layout_gravity="center_vertical" android:layout_weight="2"/>
+    </LinearLayout>
 </LinearLayout>
