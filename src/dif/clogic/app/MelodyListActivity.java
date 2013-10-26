@@ -90,7 +90,9 @@ public class MelodyListActivity extends Activity {
                 while(true) {
                     if(mPlayer == null)
                         continue;
-                    playerSeekBar.setProgress(mPlayer.getCurrentPosition());
+
+                    if(mPlayer.isPlaying())
+                        playerSeekBar.setProgress(mPlayer.getCurrentPosition());
                 }
             }
         }).start();
