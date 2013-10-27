@@ -16,7 +16,7 @@ import javax.microedition.khronos.opengles.GL10;
  * Time: 오후 2:33
  * To change this template use File | Settings | File Templates.
  */
-abstract class GLRenderer implements GLSurfaceView.Renderer {
+public abstract class GLRenderer implements GLSurfaceView.Renderer {
 
     protected Context mContext;
     protected SpriteBundle spriteBundle;

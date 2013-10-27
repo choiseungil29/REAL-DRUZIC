@@ -34,6 +34,7 @@ public class AccompanimentListActivity extends Activity {
     private ListView listView;
     private Button addButton;
     private ArrayList<Accompaniment> accompanimentList;
+    private AccompanimentAdapter accompanimentAdapter;
     private DbOpenHelper mDbOpenHelper;
     private MediaPlayer mPlayer = null;
 
@@ -65,6 +66,8 @@ public class AccompanimentListActivity extends Activity {
                 }
             }
         });
+
+        mPlayer = new MediaPlayer();
 
         progress = (CustomProgressBar)findViewById(R.id.accompanimentProgress);
 
@@ -107,7 +110,7 @@ public class AccompanimentListActivity extends Activity {
 
 
         accompanimentList = new ArrayList<Accompaniment>();
-        final AccompanimentAdapter accompanimentAdapter = new AccompanimentAdapter(this, R.layout.row, accompanimentList);
+        accompanimentAdapter = new AccompanimentAdapter(this, R.layout.row, accompanimentList);
 
         mDbOpenHelper = new DbOpenHelper(AccompanimentListActivity.this);
         try {
@@ -153,8 +156,13 @@ public class AccompanimentListActivity extends Activity {
 
                         if (data[i].equals("음악 듣기")) {
 
-                            if (mPlayer == null) {
+                            if (mPlayer == null)
                                 mPlayer = new MediaPlayer();
+
+                            if(mPlayer.isPlaying()) {
+                                mPlayer.stop();
+                                mPlayer.reset();
+                            } else {
                                 mPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                                     @Override
                                     public void onCompletion(MediaPlayer mediaPlayer) {
@@ -163,9 +171,6 @@ public class AccompanimentListActivity extends Activity {
                                         progress.setProgress(0);
                                     }
                                 });
-                            } else {
-                                mPlayer.stop();
-                                mPlayer.reset();
                             }
 
                             try {
@@ -257,11 +262,29 @@ public class AccompanimentListActivity extends Activity {
     @Override
     public void onPause() {
         super.onPause();
+
+        if(mPlayer.isPlaying())
+            mPlayer.pause();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        if(mPlayer.isPlaying())
+            mPlayer.pause();
     }
 
     @Override
     public void onResume() {
         super.onResume();
+
+        String ext = Environment.getExternalStorageState();
+        if(ext.equals(Environment.MEDIA_MOUNTED)) {
+            findFolder();
+        } else {
+        }
+        accompanimentAdapter.notifyDataSetChanged();
     }
 
     private void findFolder() {

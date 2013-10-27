@@ -5,7 +5,7 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent"
               android:id="@+id/melodyLinearLayout"
-              android:background="#FFFFFF">
+              android:background="#EDF2F1">
 
     <ListView
             android:layout_width="fill_parent"

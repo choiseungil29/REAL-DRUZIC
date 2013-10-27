@@ -65,6 +65,8 @@ public class MelodyListActivity extends Activity {
             }
         });
 
+        mPlayer = new MediaPlayer();
+
         progress = (CustomProgressBar)findViewById(R.id.melodyProgress);
 
         /*playerSeekBar = (SeekBar)findViewById(R.id.melodySeekBar);
@@ -152,8 +154,13 @@ public class MelodyListActivity extends Activity {
                         String[] data = getResources().getStringArray(R.array.data);
 
                         if (data[i].equals("음악 듣기")) {
-                            if (mPlayer == null) {
+                            if (mPlayer == null)
                                 mPlayer = new MediaPlayer();
+
+                            if(mPlayer.isPlaying()) {
+                                mPlayer.stop();
+                                mPlayer.reset();
+                            } else {
                                 mPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                                     @Override
                                     public void onCompletion(MediaPlayer mediaPlayer) {
@@ -162,9 +169,6 @@ public class MelodyListActivity extends Activity {
                                         progress.setProgress(0);
                                     }
                                 });
-                            } else {
-                                mPlayer.stop();
-                                mPlayer.reset();
                             }
 
                             try {
@@ -263,6 +267,22 @@ public class MelodyListActivity extends Activity {
         } else {
         }
         melodyAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        if(mPlayer.isPlaying())
+            mPlayer.pause();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        if(mPlayer.isPlaying())
+            mPlayer.pause();
     }
 
     private void findFolder() {
