@@ -4,7 +4,8 @@
         android:layout_height="match_parent"
         android:orientation="horizontal"
         android:paddingLeft="0dp" android:paddingTop="0dp" android:paddingRight="0dp" android:paddingBottom="-1dp"
-        android:baselineAligned="true" android:background="@drawable/background7">
+        android:baselineAligned="true" android:background="@drawable/custom_listview_item" android:clickable="false"
+        android:focusable="false">
     <TextView
             android:id="@+id/filename"
             android:layout_width="match_parent"

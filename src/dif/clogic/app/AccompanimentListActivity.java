@@ -124,7 +124,7 @@ public class AccompanimentListActivity extends Activity {
             findFolder();
         }
 
-        addButton = (Button)findViewById(R.id.addAccompanimentBtn);
+        /*addButton = (Button)findViewById(R.id.addAccompanimentBtn);
         addButton.setText("반주 그리기");
         addButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -134,7 +134,7 @@ public class AccompanimentListActivity extends Activity {
                 Intent intent = new Intent(AccompanimentListActivity.this, AccompanimentActivity.class);
                 startActivity(intent);
             }
-        });
+        });*/
 
         listView = (ListView)findViewById(R.id.accompanimentListView);
         listView.setAdapter(accompanimentAdapter);

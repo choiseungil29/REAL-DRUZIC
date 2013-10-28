@@ -10,10 +10,17 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.View;
-import android.widget.*;
+import android.widget.AdapterView;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ListView;
 import dif.clogic.custom.CustomProgressBar;
-import dif.clogic.other.*;
+import dif.clogic.other.Accompaniment;
+import dif.clogic.other.DbOpenHelper;
+import dif.clogic.other.Melody;
+import dif.clogic.other.MelodyAdapter;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,7 +54,7 @@ public class MelodyListActivity extends Activity {
 
         setTitle("멜로디 리스트");
 
-        playButton = (Button)findViewById(R.id.melodyPlayButton);
+        /*playButton = (Button)findViewById(R.id.melodyPlayButton);
         playButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -63,7 +70,7 @@ public class MelodyListActivity extends Activity {
                     mPlayer.start();
                 }
             }
-        });
+        });*/
 
         mPlayer = new MediaPlayer();
 
@@ -123,7 +130,7 @@ public class MelodyListActivity extends Activity {
         } else {
         }
 
-        addButton = (Button)findViewById(R.id.addAccompanimentBtn);
+        /*addButton = (Button)findViewById(R.id.addAccompanimentBtn);
         addButton.setText("멜로디 그리기");
         addButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -133,7 +140,7 @@ public class MelodyListActivity extends Activity {
                 Intent intent = new Intent(MelodyListActivity.this, CheckboxListViewActivity.class);
                 startActivity(intent);
             }
-        });
+        });*/
 
         listView = (ListView)findViewById(R.id.accompanimentListView);
         listView.setAdapter(melodyAdapter);
@@ -255,6 +262,12 @@ public class MelodyListActivity extends Activity {
                 builder.show();
             }
         });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.addbtn, menu);
+        return true;
     }
 
     @Override
