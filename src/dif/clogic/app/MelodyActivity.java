@@ -23,6 +23,7 @@ import dif.clogic.graphics.SpriteBundle;
 import dif.clogic.other.ChordReference;
 import dif.clogic.other.DbOpenHelper;
 import dif.clogic.other.Sound;
+import dif.clogic.sprite.ScreenSprite;
 import dif.clogic.sprite.TouchSprite;
 import dif.clogic.texture.Texture;
 import dif.clogic.texture.TextureCache;
@@ -138,7 +139,7 @@ public class MelodyActivity extends Activity {
         private float bpm = 60.0f;
         private float bpmTimer = 0.0f;
 
-        private int[] beatSequence = ChordReference.beat2;
+        private int[] beatSequence = ChordReference.beatReady;
         private int beatSequenceIdx = 0;
 
         private int[] codeSequence = ChordReference.C;
@@ -157,6 +158,8 @@ public class MelodyActivity extends Activity {
         private ArrayList<String> recordList;
 
         private Handler handler;
+
+        private ScreenSprite[] sprite = new ScreenSprite[6];
 
         public MelodyRenderer(Context context, MelodyView.GLThread pThread, ArrayList<String> recordData) {
             super(context);
@@ -189,7 +192,11 @@ public class MelodyActivity extends Activity {
                     if(str.equals("R")) {
                         accompanimentList[i].add(new AccompanimentSound("R", 1));
                     } else {
-                        accompanimentList[i].add(new AccompanimentSound(str.charAt(0) + "_" + (str.charAt(1)-'0'), str.charAt(3)-'0'));
+                        try {
+                            accompanimentList[i].add(new AccompanimentSound(str.charAt(0) + "_" + (str.charAt(1)-'0'), str.charAt(2)-'0'));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
             }
@@ -229,7 +236,7 @@ public class MelodyActivity extends Activity {
                                     String filename = editText.getText().toString();
                                     if(filename.equals(""))
                                         filename = fomatter.format(currentTime);
-                                    saveFile(filename);
+                                    saveFile(filename, fomatter.format(currentTime));
                                     ((Activity)mContext).finish();
                                 }
                             })
@@ -253,6 +260,18 @@ public class MelodyActivity extends Activity {
             for(int i=0; i<11; i++) {
                 String filename = "touch_" + String.format("%02d", i+1);
                 TextureCache.getInstance().addTexture(filename, new Texture(gl, mContext, mContext.getResources().getIdentifier(filename, "drawable", mContext.getPackageName())));
+            }
+
+            TextureCache.getInstance().addTexture("screen_mint", new Texture(gl, mContext, mContext.getResources().getIdentifier("touchscreen_mint", "drawable", mContext.getPackageName())));
+            TextureCache.getInstance().addTexture("screen_white", new Texture(gl, mContext, mContext.getResources().getIdentifier("touchscreen_white", "drawable", mContext.getPackageName())));
+
+            for(int i=0; i<6; i++) {
+                if(i%2 == 0)
+                    sprite[i] = new ScreenSprite(TextureCache.getInstance().getTexture("screen_mint"));
+                else
+                    sprite[i] = new ScreenSprite(TextureCache.getInstance().getTexture("screen_white"));
+                sprite[i].setAnchorPoint(0.0f, 0.0f);
+                spriteBundle.addSprite(sprite[i]);
             }
 
             thread.start();
@@ -335,12 +354,29 @@ public class MelodyActivity extends Activity {
         public void update(float dt) {
             spriteBundle.update(dt);
 
+            for(int i=0; i<6; i++) {
+                if(i < codeSequence.length) {
+                    sprite[i].setIsVisible(true);
+                    sprite[i].setScale(sprite[i].getScale().x, (windowHeight / codeSequence.length) / 100.0f);
+                    sprite[i].setPosition(0.0f, windowHeight / codeSequence.length * i);
+                } else {
+                    sprite[i].setIsVisible(false);
+                }
+            }
+
             if(bpmTimer >= (bpm/60.0f)/12) { // 반의 반박자마다 한번씩 들어감
                 bpmTimer = 0.0f;
 
                 codeSequence = ChordReference.redPackage[(beatSequenceIdx/beatSequence.length)%ChordReference.redPackage.length];
 
                 soundPool.play(soundFileTable.get(ChordReference.beatList[beatSequence[beatSequenceIdx % beatSequence.length]]), 1, 1, 0, 0, 1);
+
+                if(beatSequenceIdx/beatSequence.length < 1) {
+                    beatSequenceIdx++;
+                    return;
+                } else {
+                    beatSequence = ChordReference.beat2;
+                }
 
                 if(beatSequenceIdx%2 == 0) { // 반박자마다 들어감
                     // melody Sequence
@@ -422,7 +458,7 @@ public class MelodyActivity extends Activity {
 
         }
 
-        public void saveFile(String filename) {
+        public void saveFile(String filename, String birth) {
 
             try {
                 mDbOpenHelper.open();
@@ -451,7 +487,7 @@ public class MelodyActivity extends Activity {
             ts.setTimeSignature(4, 4, TimeSignature.DEFAULT_METER, TimeSignature.DEFAULT_DIVISION);
 
             Tempo t = new Tempo();
-            t.setBpm(60);
+            t.setBpm(90);
 
             tempoTrack.insertEvent(ts);
             tempoTrack.insertEvent(t);
@@ -507,9 +543,9 @@ public class MelodyActivity extends Activity {
                 }
 
                 noteTrack.insertNote(channel, pitch, velocity, melodyLength, length * 120); // 240이면 1박자
+
                 melodyLength = melodyLength + length * 120;
             }
-
             tracks.add(noteTrack);
 
             for(int i=0; i<recordList.size(); i++) {

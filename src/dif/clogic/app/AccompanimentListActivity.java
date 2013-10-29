@@ -1,10 +1,13 @@
 package dif.clogic.app;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Typeface;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
@@ -12,6 +15,11 @@ import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.*;
+import com.leff.midi.MidiFile;
+import com.leff.midi.MidiTrack;
+import com.leff.midi.event.ChannelEvent;
+import com.leff.midi.event.MidiEvent;
+import com.leff.midi.event.ProgramChange;
 import dif.clogic.custom.CustomProgressBar;
 import dif.clogic.other.Accompaniment;
 import dif.clogic.other.AccompanimentAdapter;
@@ -21,6 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  * Created with IntelliJ IDEA.
@@ -32,14 +41,12 @@ import java.util.ArrayList;
 public class AccompanimentListActivity extends Activity {
 
     private ListView listView;
-    private Button addButton;
     private ArrayList<Accompaniment> accompanimentList;
     private AccompanimentAdapter accompanimentAdapter;
     private DbOpenHelper mDbOpenHelper;
     private MediaPlayer mPlayer = null;
 
-    //private SeekBar playerSeekBar;
-    private Button playButton;
+    private ImageButton playButton;
     private CustomProgressBar progress;
 
     @Override
@@ -49,7 +56,7 @@ public class AccompanimentListActivity extends Activity {
 
         setTitle("반주 리스트");
 
-        playButton = (Button)findViewById(R.id.playButton);
+        playButton = (ImageButton)findViewById(R.id.accompanimentPlayButton);
         playButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -58,10 +65,10 @@ public class AccompanimentListActivity extends Activity {
                     return;
 
                 if(mPlayer.isPlaying()) {
-                    playButton.setText("재생");
+                    playButton.setImageDrawable(getResources().getDrawable(R.drawable.play5));
                     mPlayer.pause();
                 } else {
-                    playButton.setText("일시정지");
+                    playButton.setImageDrawable(getResources().getDrawable(R.drawable.pause2));
                     mPlayer.start();
                 }
             }
@@ -69,29 +76,11 @@ public class AccompanimentListActivity extends Activity {
 
         mPlayer = new MediaPlayer();
 
+        TextView t = (TextView)findViewById(R.id.playingTitle);
+        Typeface font = Typeface.createFromAsset(getAssets(), "nanumN.ttf");
+        t.setTypeface(font);
+
         progress = (CustomProgressBar)findViewById(R.id.accompanimentProgress);
-
-        /*playerSeekBar = (SeekBar)findViewById(R.id.seekBar);
-        playerSeekBar.setVisibility(ProgressBar.VISIBLE);
-        playerSeekBar.setProgressDrawable(this.getResources().getDrawable(R.drawable.custom_seekbar));
-        playerSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                //To change body of implemented methods use File | Settings | File Templates.
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-                //To change body of implemented methods use File | Settings | File Templates.
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                //To change body of implemented methods use File | Settings | File Templates.
-                if (mPlayer != null)
-                    mPlayer.seekTo(seekBar.getProgress());
-            }
-        });*/
 
         new Thread(new Runnable() {
             @Override
@@ -103,7 +92,6 @@ public class AccompanimentListActivity extends Activity {
 
                     if(mPlayer.isPlaying())
                         progress.setProgress(mPlayer.getCurrentPosition());
-                        //playerSeekBar.setProgress(mPlayer.getCurrentPosition());
                 }
             }
         }).start();
@@ -124,21 +112,8 @@ public class AccompanimentListActivity extends Activity {
             findFolder();
         }
 
-        /*addButton = (Button)findViewById(R.id.addAccompanimentBtn);
-        addButton.setText("반주 그리기");
-        addButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                //To change body of implemented methods use File | Settings | File Templates.
-                // go to drawActivity!!
-                Intent intent = new Intent(AccompanimentListActivity.this, AccompanimentActivity.class);
-                startActivity(intent);
-            }
-        });*/
-
         listView = (ListView)findViewById(R.id.accompanimentListView);
         listView.setAdapter(accompanimentAdapter);
-        listView.setDividerHeight(0);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, final int which, long l) {
@@ -159,19 +134,15 @@ public class AccompanimentListActivity extends Activity {
                             if (mPlayer == null)
                                 mPlayer = new MediaPlayer();
 
-                            if(mPlayer.isPlaying()) {
-                                mPlayer.stop();
-                                mPlayer.reset();
-                            } else {
-                                mPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                                    @Override
-                                    public void onCompletion(MediaPlayer mediaPlayer) {
-                                        //To change body of implemented methods use File | Settings | File Templates.
-                                        //playerSeekBar.setProgress(0);
-                                        progress.setProgress(0);
-                                    }
-                                });
-                            }
+                            mPlayer.reset();
+                            mPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                                @Override
+                                public void onCompletion(MediaPlayer mediaPlayer) {
+                                    //To change body of implemented methods use File | Settings | File Templates.
+                                    progress.setProgress(0);
+                                    playButton.setImageDrawable(getResources().getDrawable(R.drawable.play5));
+                                }
+                            });
 
                             try {
                                 String str = Environment.getExternalStorageDirectory().getAbsolutePath();
@@ -185,17 +156,73 @@ public class AccompanimentListActivity extends Activity {
                             }
                             mPlayer.start();
 
-                            playButton.setText("일시정지");
+                            playButton.setImageDrawable(getResources().getDrawable(R.drawable.pause2));
 
-                            /*playerSeekBar.setProgress(0);
-                            playerSeekBar.setMax(mPlayer.getDuration());*/
                             progress.setProgress(0);
                             progress.setMax(mPlayer.getDuration());
+
+                            TextView t = (TextView)findViewById(R.id.playingTitle);
+                            t.setText(accompanimentList.get(which).Name);
+                            Typeface font = Typeface.createFromAsset(getAssets(), "nanumN.ttf");
+                            t.setTypeface(font);
+                        }
+
+                        if (data[i].equals("악기 설정")) {
+                            AlertDialog.Builder builder = new AlertDialog.Builder(AccompanimentListActivity.this);
+                            builder.setTitle("악기 설정");
+                            builder.setItems(R.array.instruments, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    //To change body of implemented methods use File | Settings | File Templates.
+                                    File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + accompanimentList.get(which).Name + ".mid");
+
+                                    MidiFile mFile = null;
+                                    try {
+                                        mFile = new MidiFile(file);
+                                    } catch (IOException e) {
+                                        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                                    }
+                                    if(mFile == null)
+                                        return;
+
+                                    MidiTrack t = mFile.getTracks().get(1);
+
+                                    String[] instruments = getResources().getStringArray(R.array.instruments);
+
+                                    Iterator<MidiEvent> it = t.getEvents().iterator();
+                                    ArrayList<MidiEvent> removeProgramChange = new ArrayList<MidiEvent>();
+                                    while(it.hasNext()) {
+                                        ChannelEvent event = (ChannelEvent) it.next();
+                                        if(event.getType() == ChannelEvent.PROGRAM_CHANGE)
+                                            removeProgramChange.add(event);
+                                    }
+
+                                    for(MidiEvent e : removeProgramChange) {
+                                        t.removeEvent(e);
+                                    }
+
+                                    if(instruments[i].equals("어쿠스틱 그랜드 피아노")) {
+                                        MidiEvent pc = new ProgramChange(0, 0, 0);
+                                        t.insertEvent(pc);
+                                    } else if (instruments[i].equals("일렉 피아노")) {
+                                        MidiEvent pc = new ProgramChange(0, 0, 4);
+                                        t.insertEvent(pc);
+                                    } else if (instruments[i].equals("실로폰")) {
+                                        MidiEvent pc = new ProgramChange(0, 0, 10);
+                                        t.insertEvent(pc);
+                                    }
+
+                                    try {
+                                        mFile.writeToFile(file);
+                                    } catch (IOException e) {
+                                        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                                    }
+                                }
+                            });
+                            builder.show();
                         }
 
                         if (data[i].equals("악보 보기")) {
-
-                            //Cursor cursor = mDbOpenHelper.getMatchName("example");
                             String params = Accompaniment.convert(accompanimentList.get(which).originRecord);
                             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://druzicofclogic.appspot.com/melody/view/" + params)); // CN5 같은 쿼리 보내주기~~
                             startActivity(intent);
@@ -218,7 +245,8 @@ public class AccompanimentListActivity extends Activity {
 
                                             File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + beforeText + ".mid");
                                             File to = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + afterText + ".mid");
-                                            file.renameTo(to);
+                                            if(!to.exists())
+                                                file.renameTo(to);
 
                                             accompanimentList.get(which).Name = afterText;
 
@@ -257,6 +285,29 @@ public class AccompanimentListActivity extends Activity {
                 builder.show();
             }
         });
+
+        ActionBar ab = getActionBar();
+        ab.setDisplayShowCustomEnabled(true);
+        ab.setDisplayShowTitleEnabled(false);
+        LayoutInflater inflater = (LayoutInflater)this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View v = inflater.inflate(R.layout.custom_actionbar, null);
+        TextView tv = (TextView)v.findViewById(R.id.actionBarTitle);
+        tv.setText("반주");
+        tv.setTypeface(font);
+
+        ImageButton button = (ImageButton)v.findViewById(R.id.addBtn);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //To change body of implemented methods use File | Settings | File Templates.
+                Intent intent = new Intent(AccompanimentListActivity.this, AccompanimentActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        ab.setCustomView(v);
+        ab.setDisplayShowHomeEnabled(false);
+        ab.setDisplayShowTitleEnabled(false);
     }
 
     @Override
@@ -288,13 +339,12 @@ public class AccompanimentListActivity extends Activity {
     }
 
     private void findFolder() {
+        accompanimentList.clear();
         Cursor cursor = mDbOpenHelper.getAllAccompanimentColumns();
         while(cursor.moveToNext()) {
-            Accompaniment song = new Accompaniment(cursor.getInt(cursor.getColumnIndex("_id")),
+            accompanimentList.add(new Accompaniment(cursor.getInt(cursor.getColumnIndex("_id")),
                     cursor.getString(cursor.getColumnIndex("name")),
-                    cursor.getString(cursor.getColumnIndex("originrecord")));
-
-            accompanimentList.add(song);
+                    cursor.getString(cursor.getColumnIndex("originrecord"))));
         }
     }
 }

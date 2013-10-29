@@ -24,6 +24,7 @@ import dif.clogic.graphics.SpriteBundle;
 import dif.clogic.other.ChordReference;
 import dif.clogic.other.DbOpenHelper;
 import dif.clogic.other.Sound;
+import dif.clogic.sprite.ScreenSprite;
 import dif.clogic.sprite.TouchSprite;
 import dif.clogic.texture.Texture;
 import dif.clogic.texture.TextureCache;
@@ -124,7 +125,7 @@ public class AccompanimentActivity extends Activity {
 
             private GLThread thread;
             private DbOpenHelper mDbOpenHelper;
-            private float bpm = 60.0f;
+            private float bpm = 75.0f;
             private float bpmTimer = 0.0f;
 
             private int[] beatSequence = ChordReference.beatReady;
@@ -145,6 +146,8 @@ public class AccompanimentActivity extends Activity {
             private GL10 gl;
 
             private Handler handler;
+
+            private ScreenSprite[] sprite = new ScreenSprite[6];
 
             public AccompanimentRenderer(Context context, GLThread pThread) {
                 super(context);
@@ -222,6 +225,18 @@ public class AccompanimentActivity extends Activity {
                     TextureCache.getInstance().addTexture(filename, new Texture(gl, mContext, mContext.getResources().getIdentifier(filename, "drawable", mContext.getPackageName())));
                 }
 
+                TextureCache.getInstance().addTexture("screen_mint", new Texture(gl, mContext, mContext.getResources().getIdentifier("touchscreen_mint", "drawable", mContext.getPackageName())));
+                TextureCache.getInstance().addTexture("screen_white", new Texture(gl, mContext, mContext.getResources().getIdentifier("touchscreen_white", "drawable", mContext.getPackageName())));
+
+                for(int i=0; i<6; i++) {
+                    if(i%2 == 0)
+                        sprite[i] = new ScreenSprite(TextureCache.getInstance().getTexture("screen_mint"));
+                    else
+                        sprite[i] = new ScreenSprite(TextureCache.getInstance().getTexture("screen_white"));
+                    sprite[i].setAnchorPoint(0.0f, 0.0f);
+                    spriteBundle.addSprite(sprite[i]);
+                }
+
                 thread.start();
             }
 
@@ -293,7 +308,17 @@ public class AccompanimentActivity extends Activity {
                 //To change body of implemented methods use File | Settings | File Templates.
                 spriteBundle.update(dt);
 
-                if(bpmTimer >= (bpm/60.0f)/12) { // 반의 반박자마다 한번씩 들어감
+                for(int i=0; i<6; i++) {
+                    if(i < codeSequence.length) {
+                        sprite[i].setIsVisible(true);
+                        sprite[i].setScale(sprite[i].getScale().x, (windowHeight / codeSequence.length) / 100.0f);
+                        sprite[i].setPosition(0.0f, windowHeight / codeSequence.length * i);
+                    } else {
+                        sprite[i].setIsVisible(false);
+                    }
+                }
+
+                if(bpmTimer >= (60.0f/bpm)/8) { // 반의 반박자마다 한번씩 들어감
                     bpmTimer = 0.0f;
 
                     codeSequence = ChordReference.redPackage[(beatSequenceIdx/beatSequence.length)%ChordReference.redPackage.length];
@@ -381,7 +406,7 @@ public class AccompanimentActivity extends Activity {
                 ts.setTimeSignature(4, 4, TimeSignature.DEFAULT_METER, TimeSignature.DEFAULT_DIVISION);
 
                 Tempo t = new Tempo();
-                t.setBpm(60);
+                t.setBpm((int)bpm);
 
                 tempoTrack.insertEvent(ts);
                 tempoTrack.insertEvent(t);

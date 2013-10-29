@@ -13,6 +13,7 @@ public class Melody {
     public int Id;
     public String Name;
     public String originRecord;
+    public String birth;
     public ArrayList<String> accompanimentRecordList;
 
     public Melody(int id, String name, String record, String accompanimentList) {

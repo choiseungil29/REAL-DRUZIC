@@ -42,36 +42,6 @@ public class ChordReference {
 
     public static final String[] beatList = { "bg_1", "bg_2", "bg_space" };
 
-    /*public static final int[] C = { 0, 4, 7, 12, 16, 19, 24, 28, 31, 36 };
-    public static final int[] CM = { 0, 3, 7, 12, 15, 19, 24, 27, 31, 36 };
-    public static final int[] D = { 2, 6, 9, 14, 18, 21, 26, 30, 33 };
-    public static final int[] DM = { 2, 5, 9, 14, 17, 21, 26, 29, 33 };
-    public static final int[] E = { 4, 8, 11, 16, 20, 23, 28, 32, 35 };
-    public static final int[] EM = { 4, 7, 11, 16, 19, 23, 28, 31, 35 };
-    public static final int[] F = { 0, 5, 9, 12, 17, 21, 24, 29, 33, 36 };
-    public static final int[] FM = {0, 5, 8, 12, 17, 20, 24, 29, 32, 36 };
-    public static final int[] G = { 2, 7, 11, 14, 19, 23, 26, 31, 35 };
-    public static final int[] GM = { 2, 7, 10, 14, 19, 22, 26, 31, 34 };
-    public static final int[] A = { 1, 4, 9, 13, 16, 21, 25, 28, 33 };
-    public static final int[] AM = { 0, 4, 9, 12, 16, 21, 24, 28, 33, 36 };
-    public static final int[] B = { 3, 6, 11, 15, 18, 23, 27, 30, 35 };
-    public static final int[] BM = { 2, 6, 11, 14, 18, 23, 26, 30, 35 };*/
-
-    /*public static final int[] C = { 0, 4, 7, 12, 16, 19, 24, 28, 31, 36, 40, 43, 48, 52, 55, 60, 64, 67, 72, 76, 79, 84, 88, 91, 96 };
-    public static final int[] CM = { 0, 3, 7, 12, 15, 19, 24, 27, 31, 36, 39, 43, 48, 51, 55, 60, 63, 67, 72, 75, 79, 84, 87, 91, 96 };
-    public static final int[] D = { 2, 6, 9, 14, 18, 21, 26, 30, 33, 38, 42, 45, 50, 54, 57, 62, 66, 69, 74, 78, 81, 86, 90, 93, 98 };
-    public static final int[] DM = { 2, 5, 9, 14, 17, 21, 26, 29, 33, 38, 41, 45, 50, 53, 57, 62, 65, 69, 74, 77, 81, 86, 89, 93, 98 };
-    public static final int[] E = { 4, 8, 11, 16, 20, 23, 28, 32, 35, 40, 44, 47, 52, 56, 59, 64, 68, 71, 76, 80, 83, 88, 92, 95 };
-    public static final int[] EM = { 4, 7, 11, 16, 19, 23, 28, 31, 35, 40, 43, 47, 52, 55, 59, 64, 67, 71, 76, 79, 83, 88, 91, 95 };
-    public static final int[] F = { 0, 5, 9, 12, 17, 21, 24, 29, 33, 36, 41, 45, 48, 53, 57, 60, 65, 69, 72, 77, 81, 84, 89, 93, 96 };
-    public static final int[] FM = {0, 5, 8, 12, 17, 20, 24, 29, 32, 36, 41, 44, 48, 53, 56, 60, 65, 68, 72, 77, 80, 84, 89, 92, 96 };
-    public static final int[] G = { 2, 7, 11, 14, 19, 23, 26, 31, 35, 38, 43, 47, 50, 55, 59, 62, 67, 71, 74, 79, 83, 86, 91, 95, 98 };
-    public static final int[] GM = { 2, 7, 10, 14, 19, 22, 26, 31, 34, 38, 43, 46, 50, 55, 58, 62, 67, 70, 74, 79, 82, 86, 91, 94, 98 };
-    public static final int[] A = { 1, 4, 9, 13, 16, 21, 25, 28, 33, 37, 40, 45, 49, 52, 57, 61, 64, 69, 73, 76, 81, 85, 88, 93, 97 };
-    public static final int[] AM = { 0, 4, 9, 12, 16, 21, 24, 28, 33, 36, 40, 45, 48, 52, 57, 60, 64, 69, 72, 76, 81, 84, 88, 93, 96 };
-    public static final int[] B = { 3, 6, 11, 15, 18, 23, 27, 30, 35, 39, 42, 47, 51, 54, 59, 63, 66, 71, 75, 78, 83, 87, 90, 95, 99 };
-    public static final int[] BM = { 2, 6, 11, 14, 18, 23, 26, 30, 35, 38, 42, 47, 50, 54, 59, 62, 66, 71, 74, 78, 83, 87, 91, 96, 99 };*/
-
     public static final int[] C = { 0, 4, 7, 12, 16, 19 };
     public static final int[] CM = { 0, 3, 7, 12, 15, 19 };
     public static final int[] D = { 2, 6, 9, 14, 18, 21 };

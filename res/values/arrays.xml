@@ -9,8 +9,16 @@
     </string-array>-->
     <string-array name="data">
         <item>음악 듣기</item>
+        <item>악기 설정</item>
         <item>이름 바꾸기</item>
         <item>삭제</item>
+    </string-array>
+
+    <string-array name="instruments">
+        <item>어쿠스틱 그랜드 피아노</item>
+        <item>일렉 피아노</item>
+        <item>실로폰</item>
+        <item>그 외</item>
     </string-array>
 
     <string-array name="main">

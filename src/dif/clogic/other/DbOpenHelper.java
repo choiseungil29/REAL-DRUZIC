@@ -33,6 +33,7 @@ public class DbOpenHelper {
         @Override
         public void onCreate(SQLiteDatabase sqLiteDatabase) {
             //To change body of implemented methods use File | Settings | File Templates.
+            String sql = "drop table " + MelodyData.CreateDB._TABLENAME;
             sqLiteDatabase.execSQL(AccompanimentData.CreateDB._CREATE);
             sqLiteDatabase.execSQL(MelodyData.CreateDB._CREATE);
         }

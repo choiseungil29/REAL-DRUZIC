@@ -36,14 +36,14 @@ public class MelodyAdapter extends ArrayAdapter<Melody> {
         if(v == null) {
             LayoutInflater vi = (LayoutInflater)mCtx.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             v = vi.inflate(resLayout, parent, false);
-        }
-        Melody s = items.get(position);
-        if( s != null) {
-            TextView text = (TextView)v.findViewById(R.id.filename);
 
-            if(text != null) {
-                text.setText(s.Name);
-                text.setTypeface(Typeface.createFromAsset(mCtx.getAssets(), "nanumN.ttf"));
+            Melody s = items.get(position);
+            if( s != null) {
+                TextView filename = (TextView)v.findViewById(R.id.filename);
+                if(filename != null) {
+                    filename.setText(s.Name);
+                    filename.setTypeface(Typeface.createFromAsset(mCtx.getAssets(), "nanumN.ttf"));
+                }
             }
         }
         return v;

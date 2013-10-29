@@ -1,13 +1,15 @@
 package dif.clogic.app;
 
+import android.app.ActionBar;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Typeface;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.Button;
-import android.widget.ListView;
+import android.widget.*;
 import dif.clogic.other.Accompaniment;
 import dif.clogic.other.AccompanimentAdapter;
 import dif.clogic.other.DbOpenHelper;
@@ -36,7 +38,7 @@ public class CheckboxListViewActivity extends Activity {
         setTitle("반주 설정하기");
 
         listView = (ListView)findViewById(R.id.accompanimentListView);
-        button = (Button)findViewById(R.id.addAccompanimentBtn);
+        //button = (Button)findViewById(R.id.addAccompanimentBtn);
 
         accompanimentList = new ArrayList<Accompaniment>();
 
@@ -59,7 +61,6 @@ public class CheckboxListViewActivity extends Activity {
 
         listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
         listView.setAdapter(adapter);
-        listView.setDividerHeight(0);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int which, long l) {
@@ -68,7 +69,17 @@ public class CheckboxListViewActivity extends Activity {
             }
         });
 
-        button.setText("멜로디 그리기");
+        ActionBar ab = getActionBar();
+        ab.setDisplayShowCustomEnabled(true);
+        ab.setDisplayShowTitleEnabled(false);
+        LayoutInflater inflater = (LayoutInflater)this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View v = inflater.inflate(R.layout.custom_actionbar, null);
+        TextView tv = (TextView)v.findViewById(R.id.actionBarTitle);
+        tv.setText("반주 설정하기");
+        Typeface font = Typeface.createFromAsset(getAssets(), "nanumN.ttf");
+        tv.setTypeface(font);
+
+        ImageButton button = (ImageButton)v.findViewById(R.id.addBtn);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -84,10 +95,12 @@ public class CheckboxListViewActivity extends Activity {
                 Intent intent = new Intent(CheckboxListViewActivity.this, MelodyActivity.class);
                 intent.putStringArrayListExtra("recordData", selectedList);
                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                // selectedList 보내기
                 startActivity(intent);
-
             }
         });
+
+        ab.setCustomView(v);
+        ab.setDisplayShowHomeEnabled(false);
+        ab.setDisplayShowTitleEnabled(false);
     }
 }

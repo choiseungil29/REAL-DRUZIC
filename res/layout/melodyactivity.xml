@@ -4,23 +4,43 @@
               android:orientation="vertical"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
-              android:id="@+id/melodyLinearLayout"
-              android:background="#EDF2F1">
+              android:background="#edf2f1">
 
     <ListView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:id="@+id/accompanimentListView" android:layout_weight="11"
+            android:id="@+id/melodyListView"
             android:choiceMode="singleChoice"
-            android:listSelector="@android:color/darker_gray"/>
+            android:listSelector="@android:color/darker_gray" android:layout_weight="1"
+            android:layout_marginLeft="15dp" android:layout_marginRight="15dp" android:layout_marginTop="15dp"
+            android:dividerHeight="10dp" android:divider="#edf2f1" android:drawSelectorOnTop="false"/>
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
                   android:layout_width="match_parent"
-                  android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1">
+                  android:layout_height="wrap_content" android:orientation="vertical"
+            >
 
         <view class="dif.clogic.custom.CustomProgressBar" android:id="@+id/melodyProgress"
                                          android:layout_width="match_parent"
-                                         android:layout_height="15dip"
+                                         android:layout_height="10dp"
                                          android:layout_gravity="center_horizontal|bottom"/>
+        <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:background="#4A4A4A">
+            <ImageButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/melodyPlayButton" android:scaleType="fitCenter" android:src="@drawable/play5"
+                    android:layout_marginLeft="6dp"
+                    android:layout_marginBottom="6dp" android:layout_marginTop="6dp"
+                    android:background="@drawable/transparent"/>
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="재생중인 노래제목"
+                    android:id="@+id/playingTitle" android:layout_gravity="center_vertical"
+                    android:layout_marginLeft="25dp" android:textSize="25sp"/>
+        </LinearLayout>
         <!--<SeekBar
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
@@ -30,17 +50,5 @@
                 android:layout_weight="8" android:layout_marginLeft="0dp" android:layout_gravity="center_vertical"
                 android:thumb="@drawable/thumb"/>-->
 
-        <LinearLayout
-                android:orientation="horizontal"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:background="#FFFFFF">
-            <ImageButton
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/imageButton" android:scaleType="fitCenter" android:src="@drawable/play"
-                    android:layout_marginLeft="10dp"
-                    android:layout_marginBottom="6dp" android:layout_marginTop="6dp"
-                    android:background="@drawable/transparent"/>
-        </LinearLayout>
     </LinearLayout>
 </LinearLayout>

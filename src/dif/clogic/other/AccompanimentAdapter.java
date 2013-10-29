@@ -50,14 +50,15 @@ public class AccompanimentAdapter extends ArrayAdapter<Accompaniment> {
                     }
                 });
             }
-        }
-        Accompaniment s = items.get(position);
-        if( s != null) {
-            TextView text = (TextView)v.findViewById(R.id.filename);
 
-            if(text != null) {
-                text.setText(s.Name);
-                text.setTypeface(Typeface.createFromAsset(mCtx.getAssets(), "nanumN.ttf"));
+            Accompaniment s = items.get(position);
+            if( s != null) {
+                TextView text = (TextView)v.findViewById(R.id.filename);
+
+                if(text != null) {
+                    text.setText(s.Name);
+                    text.setTypeface(Typeface.createFromAsset(mCtx.getAssets(), "nanumN.ttf"));
+                }
             }
         }
         return v;
