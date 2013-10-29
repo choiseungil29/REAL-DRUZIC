@@ -12,7 +12,6 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 import android.view.*;
 import android.widget.EditText;
 import com.leff.midi.MidiFile;
@@ -84,7 +83,6 @@ public class AccompanimentActivity extends Activity {
             thread = new GLThread();
             renderer = new AccompanimentRenderer(context, thread);
 
-            //thread.start();
             setRenderer(renderer);
         }
 
@@ -93,7 +91,7 @@ public class AccompanimentActivity extends Activity {
             renderer.onDestroy();
         }
 
-        public synchronized boolean onTouchEvent(final MotionEvent event) {
+        public boolean onTouchEvent(final MotionEvent event) {
             return renderer.onTouchEvent(event);
         }
 
@@ -108,7 +106,7 @@ public class AccompanimentActivity extends Activity {
                 isRun = false;
             }
 
-            public synchronized void run() {
+            public void run() {
                 float frameRate = 1000.0f/60.0f;
                 long time = System.currentTimeMillis();
                 while(isRun) {
@@ -137,13 +135,14 @@ public class AccompanimentActivity extends Activity {
             private HashMap<String, Integer> soundFileTable;
 
             private List<Sound> playEndSoundList;
-            private List<Sound> playSoundList;
+            private List<Sound> bePlaySoundList;
+            private List<Sound> bePlayingSoundList;
 
             private String record;
 
-            private boolean isEnd = false;
-
-            private GL10 gl;
+            private MotionEvent event = null;
+            private boolean isTouching = false;
+            private PointF touchPoint;
 
             private Handler handler;
 
@@ -163,7 +162,8 @@ public class AccompanimentActivity extends Activity {
                 soundPool = new SoundPool(256, AudioManager.STREAM_MUSIC, 0);
                 soundFileTable = new HashMap<String, Integer>();
                 playEndSoundList = Collections.synchronizedList(new ArrayList<Sound>());
-                playSoundList = Collections.synchronizedList(new ArrayList<Sound>());
+                bePlaySoundList = Collections.synchronizedList(new ArrayList<Sound>());
+                bePlayingSoundList = Collections.synchronizedList(new ArrayList<Sound>());
 
                 for(int i=0; i< ChordReference.accompanimentList.length; i++) {
                     soundFileTable.put(ChordReference.accompanimentList[i], soundPool.load(context, context.getResources().getIdentifier(ChordReference.accompanimentList[i], "raw", "dif.clogic.app"), 0));
@@ -249,14 +249,12 @@ public class AccompanimentActivity extends Activity {
             @Override
             public void onSurfaceCreated(GL10 gl, EGLConfig eglConfig) {
                 super.onSurfaceCreated(gl, eglConfig);
-                this.gl = gl;
                 this.Initialize(gl);
             }
 
             @Override
             public void onSurfaceChanged(GL10 gl, int w, int h) {
                 super.onSurfaceChanged(gl, w, h);
-                this.gl = gl;
             }
 
             @Override
@@ -267,34 +265,26 @@ public class AccompanimentActivity extends Activity {
 
             @Override
             public boolean onTouchEvent(MotionEvent event) {
-                PointF touchPoint = new PointF(event.getX(), this.windowHeight - event.getY());
+
+                this.event = event;
+
+                if(beatSequenceIdx/beatSequence.length < 1)
+                    return false;
+
+                touchPoint = new PointF(event.getX(), this.windowHeight - event.getY());
 
                 switch(event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
-
-                        for(int i=0; i<codeSequence.length; i++) { // code package 순서정리..
-                            if(event.getY() >= (windowHeight / codeSequence.length * i) &&
-                                    (event.getY() < windowHeight / codeSequence.length * (i+1))) {
-                                synchronized (playSoundList) {
-                                    playSoundList.add(new Sound(ChordReference.melodyList2[codeSequence[codeSequence.length - 1 - i]]));
-                                }
-                            }
-                        }
+                        isTouching = true;
 
                         TouchSprite sprite = new TouchSprite();
                         sprite.setPosition(touchPoint.x, touchPoint.y);
                         spriteBundle.addSprite(sprite);
-                        return true;
+                        break;
                     case MotionEvent.ACTION_MOVE:
                         break;
                     case MotionEvent.ACTION_UP:
-                        for(Sound sound : playSoundList) {
-                            if(sound.isStart && !sound.isEnd) {
-                                synchronized (playEndSoundList) {
-                                    playEndSoundList.add(sound);
-                                }
-                            }
-                        }
+                        isTouching = false;
                         break;
                     default:
                         break;
@@ -318,7 +308,34 @@ public class AccompanimentActivity extends Activity {
                     }
                 }
 
-                if(bpmTimer >= (60.0f/bpm)/8) { // 반의 반박자마다 한번씩 들어감
+                if(beatSequenceIdx/beatSequence.length >= 1) {
+                    if(event != null) {
+                        if(event.getAction() == MotionEvent.ACTION_DOWN) {
+                            for(int i=0; i<codeSequence.length; i++) { // code package 순서정리..
+                                if(touchPoint.y >= (windowHeight / codeSequence.length * i) &&
+                                        (touchPoint.y < windowHeight / codeSequence.length * (i+1))) {
+                                    if(!bePlaySoundList.isEmpty())
+                                        bePlaySoundList.clear();
+                                    if(bePlayingSoundList.isEmpty())
+                                        bePlaySoundList.add(new Sound(ChordReference.melodyList2[codeSequence[codeSequence.length - 1 - i]]));
+                                }
+                            }
+                        }
+
+                        if(event.getAction() != MotionEvent.ACTION_DOWN) {
+                            ArrayList<Sound> removeList = new ArrayList<Sound>();
+                            for(Sound sound : bePlayingSoundList) {
+                                if(!playEndSoundList.contains(sound)) {
+                                    playEndSoundList.add(sound);
+                                    removeList.add(sound);
+                                }
+                            }
+                            bePlayingSoundList.removeAll(removeList);
+                        }
+                    }
+                }
+
+                if(bpmTimer >= (60.0f/bpm)/8) { // 60.0f / bpm -> 1박자마다 들어가는 루프. /8이 붙으면 반의 반박자마다
                     bpmTimer = 0.0f;
 
                     codeSequence = ChordReference.redPackage[(beatSequenceIdx/beatSequence.length)%ChordReference.redPackage.length];
@@ -340,46 +357,51 @@ public class AccompanimentActivity extends Activity {
 
                     if(beatSequenceIdx%2 == 0) { // 반박자마다 들어감
                         // melody Sequence
-                        synchronized (playSoundList) {
-                            for(Sound sound : playSoundList) {
-                                if(sound.isEnd)
-                                    continue;
-
-                                sound.isStart = true;
-                                if(!sound.isPlaying) {
+                        {
+                            ArrayList<Sound> removeList = new ArrayList<Sound>();
+                            for(Sound sound : bePlaySoundList) {
+                                if(!bePlayingSoundList.contains(sound)) {
                                     sound.streamId = soundPool.play(soundFileTable.get(sound.refName), sound.volume, sound.volume, 0, 0, 1);
-                                    sound.isPlaying = true;
+                                    bePlayingSoundList.add(sound);
+                                    removeList.add(sound);
+                                }
+                            }
+                            bePlaySoundList.removeAll(removeList);
+                        }
+
+                        {
+                            ArrayList<Sound> removeList = new ArrayList<Sound>();
+                            for(Sound sound : bePlayingSoundList) {
+                                if(sound.beatTerm < 4) {
+                                    sound.beatTerm++;
                                 } else {
-                                    if(sound.beatTerm < 4) {
-                                        sound.beatTerm++;
-                                    } else {
+                                    if(!playEndSoundList.contains(sound)) {
                                         playEndSoundList.add(sound);
+                                        removeList.add(sound);
                                     }
                                 }
                             }
+                            bePlayingSoundList.removeAll(removeList);
                         }
 
-                        synchronized (playEndSoundList) {
+                        {
                             ArrayList<Sound> removeList = new ArrayList<Sound>();
                             for(Sound sound : playEndSoundList) {
-                                sound.isPlaying = false;
-                                sound.isEnd = true;
-
                                 if(sound.volume > 0.0f) {
                                     sound.volume -= 0.24f;
                                     soundPool.setVolume(sound.streamId, sound.volume, sound.volume);
                                 } else {
                                     record += sound.refName.replace("_", "") + "_" + sound.beatTerm + " ";
-                                    Log.i("TEST", "record : " + record);
                                     soundPool.stop(sound.streamId);
                                     removeList.add(sound);
                                 }
                             }
+                            if(playEndSoundList.isEmpty()) {
+                                record += "R" + " ";
+                            }
                             playEndSoundList.removeAll(removeList);
                         }
-                        if(playEndSoundList.isEmpty()) {
-                            record += "R" + " ";
-                        }
+
                     }
                     beatSequenceIdx++;
                 }

@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.*;
@@ -14,6 +15,7 @@ import dif.clogic.other.Accompaniment;
 import dif.clogic.other.AccompanimentAdapter;
 import dif.clogic.other.DbOpenHelper;
 
+import java.io.File;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
@@ -85,15 +87,18 @@ public class CheckboxListViewActivity extends Activity {
             public void onClick(View view) {
                 //To change body of implemented methods use File | Settings | File Templates.
                 ArrayList<String> selectedList = new ArrayList<String>();
+                ArrayList<String> filenameList = new ArrayList<String>();
 
                 for(int i=0; i<accompanimentList.size(); i++) {
                     if(accompanimentList.get(i).checked) {
                         selectedList.add(adapter.getItem(i).originRecord);
+                        filenameList.add(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + adapter.getItem(i).Name + ".mid");
                     }
                 }
 
                 Intent intent = new Intent(CheckboxListViewActivity.this, MelodyActivity.class);
                 intent.putStringArrayListExtra("recordData", selectedList);
+                intent.putStringArrayListExtra("filenameData", filenameList);
                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivity(intent);
             }

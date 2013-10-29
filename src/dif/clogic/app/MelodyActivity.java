@@ -16,6 +16,8 @@ import android.view.*;
 import android.widget.EditText;
 import com.leff.midi.MidiFile;
 import com.leff.midi.MidiTrack;
+import com.leff.midi.event.ChannelEvent;
+import com.leff.midi.event.MidiEvent;
 import com.leff.midi.event.meta.Tempo;
 import com.leff.midi.event.meta.TimeSignature;
 import dif.clogic.graphics.GLRenderer;
@@ -54,7 +56,7 @@ public class MelodyActivity extends Activity {
         getActionBar().hide();
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
-        view = new MelodyView(this, getIntent().getStringArrayListExtra("recordData"));
+        view = new MelodyView(this, getIntent().getStringArrayListExtra("recordData"), getIntent().getStringArrayListExtra("filenameData"));
         setContentView(view);
     }
 
@@ -84,11 +86,11 @@ public class MelodyActivity extends Activity {
         private MelodyRenderer renderer;
         private GLThread thread;
 
-        public MelodyView(Context context, ArrayList<String> recordData) {
+        public MelodyView(Context context, ArrayList<String> recordData, ArrayList<String> filenameData) {
             super(context);
 
             thread = new GLThread();
-            renderer = new MelodyRenderer(context, thread, recordData);
+            renderer = new MelodyRenderer(context, thread, recordData , filenameData);
             setRenderer(renderer);
         }
 
@@ -117,7 +119,7 @@ public class MelodyActivity extends Activity {
                 isRun = false;
             }
 
-            public synchronized void run() {
+            public void run() {
                 float frameRate = 1000.0f/60.0f;
                 long time = System.currentTimeMillis();
                 while(isRun) {
@@ -136,7 +138,7 @@ public class MelodyActivity extends Activity {
 
         private MelodyView.GLThread thread;
         private DbOpenHelper mDbOpenHelper;
-        private float bpm = 60.0f;
+        private float bpm = 75.0f;
         private float bpmTimer = 0.0f;
 
         private int[] beatSequence = ChordReference.beatReady;
@@ -148,23 +150,30 @@ public class MelodyActivity extends Activity {
         private HashMap<String, Integer> soundFileTable;
 
         private List<Sound> playEndSoundList;
-        private List<Sound> playSoundList;
+        private List<Sound> bePlaySoundList;
+        private List<Sound> bePlayingSoundList;
 
         private ArrayList<AccompanimentSound>[] accompanimentList;
-        private ArrayList<AccompanimentSound> accompanimentEndList;
         private int[] accompanimentListIdx;
 
         private String record;
         private ArrayList<String> recordList;
+        private ArrayList<String> filenameList;
+        private ArrayList<Integer> filenameIdList;
+
+        private MotionEvent event = null;
+        PointF touchPoint;
 
         private Handler handler;
 
         private ScreenSprite[] sprite = new ScreenSprite[6];
 
-        public MelodyRenderer(Context context, MelodyView.GLThread pThread, ArrayList<String> recordData) {
+        public MelodyRenderer(Context context, MelodyView.GLThread pThread, ArrayList<String> recordData, ArrayList<String> filenameData) {
             super(context);
             thread = pThread;
             recordList = recordData;
+            filenameList = filenameData;
+            filenameIdList = new ArrayList<Integer>();
 
             mDbOpenHelper = new DbOpenHelper(context);
             try {
@@ -175,12 +184,12 @@ public class MelodyActivity extends Activity {
 
             soundPool = new SoundPool(256, AudioManager.STREAM_MUSIC, 0);
             soundFileTable = new HashMap<String, Integer>();
-            playSoundList = Collections.synchronizedList(new ArrayList<Sound>());
+            bePlaySoundList = Collections.synchronizedList(new ArrayList<Sound>());
+            bePlayingSoundList = Collections.synchronizedList(new ArrayList<Sound>());
             playEndSoundList = Collections.synchronizedList(new ArrayList<Sound>());
 
             accompanimentListIdx = new int[recordList.size()];
             accompanimentList = new ArrayList[recordList.size()];
-            accompanimentEndList = new ArrayList<AccompanimentSound>();
 
             for(int i=0; i<recordList.size(); i++) {
                 accompanimentListIdx[i] = 0;
@@ -212,6 +221,10 @@ public class MelodyActivity extends Activity {
 
             for(int i=0; i<ChordReference.melodyList2.length; i++) {
                 soundFileTable.put(ChordReference.melodyList2[i], soundPool.load(context, context.getResources().getIdentifier(ChordReference.melodyList2[i], "raw", "dif.clogic.app"), 0));
+            }
+
+            for(String str : filenameList) {
+                filenameIdList.add(soundPool.load(str, 0));
             }
 
             record = "";
@@ -304,36 +317,22 @@ public class MelodyActivity extends Activity {
 
         @Override
         public boolean onTouchEvent(MotionEvent event) {
-            PointF touchPoint = new PointF(event.getX(), this.windowHeight - event.getY());
+            this.event = event;
+
+            if(beatSequenceIdx/beatSequence.length < 1)
+                return false;
+
+            touchPoint = new PointF(event.getX(), this.windowHeight - event.getY());
 
             switch(event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
-
-                    for(int i=0; i<codeSequence.length; i++) { // code package 순서정리..
-                        if(event.getY() >= (windowHeight / codeSequence.length * i) &&
-                                (event.getY() < windowHeight / codeSequence.length * (i+1))) {
-                            synchronized (playSoundList) {
-                                playSoundList.add(new Sound(ChordReference.melodyList2[codeSequence[codeSequence.length - 1 - i]]));
-                            }
-                        }
-                    }
-
                     TouchSprite sprite = new TouchSprite();
                     sprite.setPosition(touchPoint.x, touchPoint.y);
                     spriteBundle.addSprite(sprite);
-                    return true;
+                    break;
                 case MotionEvent.ACTION_MOVE:
                     break;
                 case MotionEvent.ACTION_UP:
-
-                    synchronized (playSoundList) {
-                        for(Sound sound : playSoundList) {
-                            if(sound.isStart && !sound.isEnd) {
-                                playEndSoundList.add(sound);
-                            }
-                        }
-                    }
-
                     break;
                 default:
                     break;
@@ -364,7 +363,34 @@ public class MelodyActivity extends Activity {
                 }
             }
 
-            if(bpmTimer >= (bpm/60.0f)/12) { // 반의 반박자마다 한번씩 들어감
+            if(beatSequenceIdx/beatSequence.length >= 1) {
+                if(event != null) {
+                    if(event.getAction() == MotionEvent.ACTION_DOWN) {
+                        for(int i=0; i<codeSequence.length; i++) { // code package 순서정리..
+                            if(touchPoint.y >= (windowHeight / codeSequence.length * i) &&
+                                    (touchPoint.y < windowHeight / codeSequence.length * (i+1))) {
+                                if(!bePlaySoundList.isEmpty())
+                                    bePlaySoundList.clear();
+                                if(bePlayingSoundList.isEmpty())
+                                    bePlaySoundList.add(new Sound(ChordReference.melodyList2[codeSequence[codeSequence.length - 1 - i]]));
+                            }
+                        }
+                    }
+
+                    if(event.getAction() != MotionEvent.ACTION_DOWN) {
+                        ArrayList<Sound> removeList = new ArrayList<Sound>();
+                        for(Sound sound : bePlayingSoundList) {
+                            if(!playEndSoundList.contains(sound)) {
+                                playEndSoundList.add(sound);
+                                removeList.add(sound);
+                            }
+                        }
+                        bePlayingSoundList.removeAll(removeList);
+                    }
+                }
+            }
+
+            if(bpmTimer >= (60.0f/bpm)/8) { // 60.0f / bpm -> 1박자마다 들어가는 루프. /8이 붙으면 반의 반박자마다
                 bpmTimer = 0.0f;
 
                 codeSequence = ChordReference.redPackage[(beatSequenceIdx/beatSequence.length)%ChordReference.redPackage.length];
@@ -381,61 +407,43 @@ public class MelodyActivity extends Activity {
                 if(beatSequenceIdx%2 == 0) { // 반박자마다 들어감
                     // melody Sequence
 
-                    for(int i=0; i<accompanimentList.length; i++) {
-                        ArrayList<AccompanimentSound> arrayList = accompanimentList[i];
-                        AccompanimentSound sound = arrayList.get(accompanimentListIdx[i]%arrayList.size());
+                    if(beatSequenceIdx%16 == 0) {
+                        // 음악파일 틀기
+                        for(int i : filenameIdList) {
+                            soundPool.play(i, 0.7f, 0.7f, 0, 0, 1);
+                        }
+                    }
 
-                        if(sound.refName.equals("R")) {
-                            accompanimentListIdx[i]++;
-                        } else {
-                            if(sound.beatTerm <= 0) {
+                    {
+                        ArrayList<Sound> removeList = new ArrayList<Sound>();
+                        for(Sound sound : bePlaySoundList) {
+                            if(!bePlayingSoundList.contains(sound)) {
                                 sound.streamId = soundPool.play(soundFileTable.get(sound.refName), sound.volume, sound.volume, 0, 0, 1);
-                                sound.beatTerm++;
-                            } else if(sound.beatTerm < sound.originBeatTerm) {
-                                sound.beatTerm++;
-                            } else {
-                                sound.beatTerm = 0;
-                                accompanimentEndList.add(sound);
-                                accompanimentListIdx[i]++;
+                                bePlayingSoundList.add(sound);
+                                removeList.add(sound);
                             }
                         }
+                        bePlaySoundList.removeAll(removeList);
                     }
 
-                    ArrayList<AccompanimentSound> accompanimentRemoveList = new ArrayList<AccompanimentSound>();
-                    for(AccompanimentSound sound : accompanimentEndList) {
-                        if(sound.volume > 0.0f) {
-                            sound.volume -= 0.2f;
-                            soundPool.setVolume(sound.streamId, sound.volume, sound.volume);
-                        } else {
-                            soundPool.stop(sound.streamId);
-                            accompanimentRemoveList.add(sound);
-                        }
-                    }
-                    accompanimentEndList.removeAll(accompanimentRemoveList);
-
-                    synchronized (playSoundList) {
-                        for(Sound sound : playSoundList) {
-                            if(sound.isEnd)
-                                continue;
-
-                            sound.isStart = true;
-                            if(!sound.isPlaying) {
-                                sound.streamId = soundPool.play(soundFileTable.get(sound.refName), sound.volume, sound.volume, 0, 0, 1);
-                                sound.isPlaying = true;
+                    {
+                        ArrayList<Sound> removeList = new ArrayList<Sound>();
+                        for(Sound sound : bePlayingSoundList) {
+                            if(sound.beatTerm < 8) {
+                                sound.beatTerm++;
                             } else {
-                                if(sound.beatTerm < 8) {
-                                    sound.beatTerm++;
+                                if(!playEndSoundList.contains(sound)) {
+                                    playEndSoundList.add(sound);
+                                    removeList.add(sound);
                                 }
                             }
                         }
+                        bePlayingSoundList.removeAll(removeList);
                     }
 
-                    synchronized (playEndSoundList) {
+                    {
                         ArrayList<Sound> removeList = new ArrayList<Sound>();
                         for(Sound sound : playEndSoundList) {
-                            sound.isPlaying = false;
-                            sound.isEnd = true;
-
                             if(sound.volume > 0.0f) {
                                 sound.volume -= 0.24f;
                                 soundPool.setVolume(sound.streamId, sound.volume, sound.volume);
@@ -445,11 +453,10 @@ public class MelodyActivity extends Activity {
                                 removeList.add(sound);
                             }
                         }
+                        if(playEndSoundList.isEmpty()) {
+                            record += "R" + " ";
+                        }
                         playEndSoundList.removeAll(removeList);
-                        removeList.clear();
-                    }
-                    if(playEndSoundList.isEmpty()) {
-                        record += "R" + " ";
                     }
                 }
                 beatSequenceIdx++;
@@ -487,13 +494,12 @@ public class MelodyActivity extends Activity {
             ts.setTimeSignature(4, 4, TimeSignature.DEFAULT_METER, TimeSignature.DEFAULT_DIVISION);
 
             Tempo t = new Tempo();
-            t.setBpm(90);
+            t.setBpm((int)bpm);
 
             tempoTrack.insertEvent(ts);
             tempoTrack.insertEvent(t);
 
             tracks.add(tempoTrack);
-            // 아래는 Accompaniment 구현 후에.
 
             int melodyLength = 0;
             MidiTrack noteTrack = new MidiTrack();
@@ -548,9 +554,31 @@ public class MelodyActivity extends Activity {
             }
             tracks.add(noteTrack);
 
+            // 아래는 Accompaniment 구현 후에.
+            // 이 코드에 파일 불러와 MidiEvent(ProgramChange)만 입히면 됨.
             for(int i=0; i<recordList.size(); i++) {
                 MidiTrack accompanimentTrack = new MidiTrack();
-                int measure = beatSequenceIdx;
+                File file = new File(filenameList.get(i));
+
+                MidiFile mFile = null;
+                try {
+                    mFile = new MidiFile(file);
+                } catch (IOException e) {
+                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                }
+                if(mFile == null)
+                    return;
+
+                MidiTrack fileTrack = mFile.getTracks().get(1);
+
+                String[] instruments = getResources().getStringArray(R.array.instruments);
+
+                Iterator<MidiEvent> it = fileTrack.getEvents().iterator();
+                while(it.hasNext()) {
+                    ChannelEvent event = (ChannelEvent) it.next();
+                    if(event.getType() == ChannelEvent.PROGRAM_CHANGE)
+                        accompanimentTrack.insertEvent(event);
+                }
 
                 int idx = 0;
                 int everyAllLength = 0;
