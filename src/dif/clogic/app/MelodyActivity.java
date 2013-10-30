@@ -26,7 +26,6 @@ import dif.clogic.other.ChordReference;
 import dif.clogic.other.DbOpenHelper;
 import dif.clogic.other.Sound;
 import dif.clogic.sprite.ScreenSprite;
-import dif.clogic.sprite.TouchSprite;
 import dif.clogic.texture.Texture;
 import dif.clogic.texture.TextureCache;
 
@@ -138,7 +137,7 @@ public class MelodyActivity extends Activity {
 
         private MelodyView.GLThread thread;
         private DbOpenHelper mDbOpenHelper;
-        private float bpm = 75.0f;
+        private float bpm = 30.0f;
         private float bpmTimer = 0.0f;
 
         private int[] beatSequence = ChordReference.beatReady;
@@ -166,7 +165,7 @@ public class MelodyActivity extends Activity {
 
         private Handler handler;
 
-        private ScreenSprite[] sprite = new ScreenSprite[6];
+        private ScreenSprite[] sprite = new ScreenSprite[10];
 
         public MelodyRenderer(Context context, MelodyView.GLThread pThread, ArrayList<String> recordData, ArrayList<String> filenameData) {
             super(context);
@@ -278,7 +277,7 @@ public class MelodyActivity extends Activity {
             TextureCache.getInstance().addTexture("screen_mint", new Texture(gl, mContext, mContext.getResources().getIdentifier("touchscreen_mint", "drawable", mContext.getPackageName())));
             TextureCache.getInstance().addTexture("screen_white", new Texture(gl, mContext, mContext.getResources().getIdentifier("touchscreen_white", "drawable", mContext.getPackageName())));
 
-            for(int i=0; i<6; i++) {
+            for(int i=0; i<10; i++) {
                 if(i%2 == 0)
                     sprite[i] = new ScreenSprite(TextureCache.getInstance().getTexture("screen_mint"));
                 else
@@ -316,44 +315,10 @@ public class MelodyActivity extends Activity {
         }
 
         @Override
-        public boolean onTouchEvent(MotionEvent event) {
-            this.event = event;
-
-            if(beatSequenceIdx/beatSequence.length < 1)
-                return false;
-
-            touchPoint = new PointF(event.getX(), this.windowHeight - event.getY());
-
-            switch(event.getAction()) {
-                case MotionEvent.ACTION_DOWN:
-                    TouchSprite sprite = new TouchSprite();
-                    sprite.setPosition(touchPoint.x, touchPoint.y);
-                    spriteBundle.addSprite(sprite);
-                    break;
-                case MotionEvent.ACTION_MOVE:
-                    break;
-                case MotionEvent.ACTION_UP:
-                    break;
-                default:
-                    break;
-            }
-            return false;
-        }
-
-        public boolean onKeyDown(int keyCode, KeyEvent event) {
-            switch (keyCode) {
-                case KeyEvent.KEYCODE_BACK:
-                    handler.sendEmptyMessage(0);
-                    thread.stopThread();
-            }
-            return false;
-        }
-
-        @Override
         public void update(float dt) {
             spriteBundle.update(dt);
 
-            for(int i=0; i<6; i++) {
+            for(int i=0; i<10; i++) {
                 if(i < codeSequence.length) {
                     sprite[i].setIsVisible(true);
                     sprite[i].setScale(sprite[i].getScale().x, (windowHeight / codeSequence.length) / 100.0f);
@@ -390,7 +355,7 @@ public class MelodyActivity extends Activity {
                 }
             }
 
-            if(bpmTimer >= (60.0f/bpm)/8) { // 60.0f / bpm -> 1박자마다 들어가는 루프. /8이 붙으면 반의 반박자마다
+            if(bpmTimer >= 1.0f/16) { // 60.0f / bpm -> 1박자마다 들어가는 루프. /8이 붙으면 반의 반박자마다
                 bpmTimer = 0.0f;
 
                 codeSequence = ChordReference.redPackage[(beatSequenceIdx/beatSequence.length)%ChordReference.redPackage.length];
@@ -401,16 +366,16 @@ public class MelodyActivity extends Activity {
                     beatSequenceIdx++;
                     return;
                 } else {
-                    beatSequence = ChordReference.beat2;
+                    beatSequence = ChordReference.beat1;
                 }
 
                 if(beatSequenceIdx%2 == 0) { // 반박자마다 들어감
                     // melody Sequence
 
-                    if(beatSequenceIdx%16 == 0) {
+                    if((beatSequenceIdx-16)%64 == 0) {
                         // 음악파일 틀기
                         for(int i : filenameIdList) {
-                            soundPool.play(i, 0.7f, 0.7f, 0, 0, 1);
+                            //soundPool.play(i, 0.7f, 0.7f, 0, 0, 1);
                         }
                     }
 
@@ -445,24 +410,62 @@ public class MelodyActivity extends Activity {
                         ArrayList<Sound> removeList = new ArrayList<Sound>();
                         for(Sound sound : playEndSoundList) {
                             if(sound.volume > 0.0f) {
+                                if(sound.volume >= 1.0f) {
+                                    String[] str = record.split(" ");
+                                    record = "";
+                                    for(int i=0; i<str.length-sound.beatTerm; i++) {
+                                        record += str[i] + " ";
+                                    }
+                                    record += sound.refName.replace("_", "") + "_" + sound.beatTerm + " ";
+                                }
                                 sound.volume -= 0.24f;
                                 soundPool.setVolume(sound.streamId, sound.volume, sound.volume);
                             } else {
-                                record += sound.refName.replace("_", "") + "_" + sound.beatTerm + " ";
                                 soundPool.stop(sound.streamId);
                                 removeList.add(sound);
                             }
                         }
-                        if(playEndSoundList.isEmpty()) {
-                            record += "R" + " ";
-                        }
                         playEndSoundList.removeAll(removeList);
                     }
+                    record += "R" + " ";
                 }
                 beatSequenceIdx++;
             }
             bpmTimer += dt;
 
+        }
+
+        @Override
+        public boolean onTouchEvent(MotionEvent event) {
+            this.event = event;
+            touchPoint = new PointF(event.getX(), this.windowHeight - event.getY());
+
+            if(beatSequenceIdx/beatSequence.length < 1)
+                return false;
+
+            switch(event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    //TouchSprite sprite = new TouchSprite();
+                    //sprite.setPosition(touchPoint.x, touchPoint.y);
+                    //spriteBundle.addSprite(sprite);
+                    break;
+                case MotionEvent.ACTION_MOVE:
+                    break;
+                case MotionEvent.ACTION_UP:
+                    break;
+                default:
+                    break;
+            }
+            return false;
+        }
+
+        public boolean onKeyDown(int keyCode, KeyEvent event) {
+            switch (keyCode) {
+                case KeyEvent.KEYCODE_BACK:
+                    handler.sendEmptyMessage(0);
+                    thread.stopThread();
+            }
+            return false;
         }
 
         public void saveFile(String filename, String birth) {
@@ -494,7 +497,7 @@ public class MelodyActivity extends Activity {
             ts.setTimeSignature(4, 4, TimeSignature.DEFAULT_METER, TimeSignature.DEFAULT_DIVISION);
 
             Tempo t = new Tempo();
-            t.setBpm((int)bpm);
+            t.setBpm(120);
 
             tempoTrack.insertEvent(ts);
             tempoTrack.insertEvent(t);
@@ -546,9 +549,10 @@ public class MelodyActivity extends Activity {
                 if (str.length() > 1) {
                     pitch = pitch + 12 * ((int)str.charAt(1) - '0');
                     length = (int)str.charAt(3) - '0';
+                    length *= 2;
                 }
 
-                noteTrack.insertNote(channel, pitch, velocity, melodyLength, length * 120); // 240이면 1박자
+                noteTrack.insertNote(channel, pitch, velocity, melodyLength, length * 120); // 120에 반박자
 
                 melodyLength = melodyLength + length * 120;
             }
@@ -621,12 +625,17 @@ public class MelodyActivity extends Activity {
                     int length = 1; // if 'R', quater*2 beat.
                     if (str.length() > 1) {
                         pitch = pitch + 12 * ((int)str.charAt(1) - '0');
-                        length = (int)str.charAt(3) - '0';
+                        if(str.length() <= 3) {
+                            length = (int)str.charAt(2) - '0';
+                        } else {
+                            length = (int)str.charAt(3) - '0';
+                        }
                     }
+                    length *= 2;
                     if(everyAllLength + length * 120 > melodyLength)
-                        length = 960;
+                        length = 1920;
 
-                    accompanimentTrack.insertNote(channel, pitch, velocity, everyAllLength, length * 120);
+                    accompanimentTrack.insertNote(channel, pitch, velocity, everyAllLength, length * 120); // 120은 반의반박자
                     everyAllLength = everyAllLength + length * 120;
                     idx++;
                 }

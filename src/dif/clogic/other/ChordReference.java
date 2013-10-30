@@ -42,18 +42,18 @@ public class ChordReference {
 
     public static final String[] beatList = { "bg_1", "bg_2", "bg_space" };
 
-    public static final int[] C = { 0, 4, 7, 12, 16, 19 };
+    public static final int[] C = { 0, 2, 4, 7, 9, 11, 14, 16, 18, 21 };
     public static final int[] CM = { 0, 3, 7, 12, 15, 19 };
     public static final int[] D = { 2, 6, 9, 14, 18, 21 };
     public static final int[] DM = { 2, 5, 9, 14, 17, 21 };
     public static final int[] E = { 4, 8, 11, 16, 20 };
-    public static final int[] EM = { 4, 7, 11, 16, 19 };
-    public static final int[] F = { 0, 5, 9, 12, 17, 21 };
+    public static final int[] EM = { 2, 4, 6, 9, 11 };
+    public static final int[] F = { 3, 5, 7, 10, 12, 14, 17, 19, 21 };
     public static final int[] FM = {0, 5, 8, 12, 17, 20 };
-    public static final int[] G = { 2, 7, 11, 14, 19 };
+    public static final int[] G = { 4, 6, 8, 11, 13, 15, 18, 20 };
     public static final int[] GM = { 2, 7, 10, 14, 19 };
     public static final int[] A = { 1, 4, 9, 13, 16, 21 };
-    public static final int[] AM = { 0, 4, 9, 12, 16, 21 };
+    public static final int[] AM = { 0, 2, 5, 7, 9, 12, 14, 16, 19, 21 };
     public static final int[] B = { 3, 6, 11, 15, 18 };
     public static final int[] BM = { 2, 6, 11, 14, 18 };
 

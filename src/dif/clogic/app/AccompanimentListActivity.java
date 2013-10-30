@@ -24,6 +24,7 @@ import dif.clogic.custom.CustomProgressBar;
 import dif.clogic.other.Accompaniment;
 import dif.clogic.other.AccompanimentAdapter;
 import dif.clogic.other.DbOpenHelper;
+import dif.clogic.other.Instruments;
 
 import java.io.File;
 import java.io.IOException;
@@ -170,7 +171,7 @@ public class AccompanimentListActivity extends Activity {
                         if (data[i].equals("악기 설정")) {
                             AlertDialog.Builder builder = new AlertDialog.Builder(AccompanimentListActivity.this);
                             builder.setTitle("악기 설정");
-                            builder.setItems(R.array.instruments, new DialogInterface.OnClickListener() {
+                            builder.setItems(Instruments.instruments, new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialogInterface, int i) {
                                     //To change body of implemented methods use File | Settings | File Templates.
@@ -201,16 +202,9 @@ public class AccompanimentListActivity extends Activity {
                                         t.removeEvent(e);
                                     }
 
-                                    if(instruments[i].equals("어쿠스틱 그랜드 피아노")) {
-                                        MidiEvent pc = new ProgramChange(0, 0, 0);
-                                        t.insertEvent(pc);
-                                    } else if (instruments[i].equals("일렉 피아노")) {
-                                        MidiEvent pc = new ProgramChange(0, 0, 4);
-                                        t.insertEvent(pc);
-                                    } else if (instruments[i].equals("실로폰")) {
-                                        MidiEvent pc = new ProgramChange(0, 0, 10);
-                                        t.insertEvent(pc);
-                                    }
+                                    ProgramChange pc = new ProgramChange(0, 0, 0);
+                                    pc.setProgramNumber(i);
+                                    t.insertEvent(pc);
 
                                     try {
                                         mFile.writeToFile(file);
@@ -251,6 +245,7 @@ public class AccompanimentListActivity extends Activity {
                                             accompanimentList.get(which).Name = afterText;
 
                                             mDbOpenHelper.updateAccompanimentColumn(accompanimentList.get(which).Id, accompanimentList.get(which).Name, Accompaniment.convert(accompanimentList.get(which).originRecord));
+                                            findFolder();
                                         }
                                     })
                                     .setNegativeButton("취소", null);

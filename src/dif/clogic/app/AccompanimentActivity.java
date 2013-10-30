@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.PointF;
 import android.media.AudioManager;
 import android.media.SoundPool;
@@ -24,7 +25,6 @@ import dif.clogic.other.ChordReference;
 import dif.clogic.other.DbOpenHelper;
 import dif.clogic.other.Sound;
 import dif.clogic.sprite.ScreenSprite;
-import dif.clogic.sprite.TouchSprite;
 import dif.clogic.texture.Texture;
 import dif.clogic.texture.TextureCache;
 
@@ -123,7 +123,7 @@ public class AccompanimentActivity extends Activity {
 
             private GLThread thread;
             private DbOpenHelper mDbOpenHelper;
-            private float bpm = 75.0f;
+            private float bpm = 30.0f;
             private float bpmTimer = 0.0f;
 
             private int[] beatSequence = ChordReference.beatReady;
@@ -146,7 +146,7 @@ public class AccompanimentActivity extends Activity {
 
             private Handler handler;
 
-            private ScreenSprite[] sprite = new ScreenSprite[6];
+            private ScreenSprite[] sprite = new ScreenSprite[10];
 
             public AccompanimentRenderer(Context context, GLThread pThread) {
                 super(context);
@@ -200,14 +200,18 @@ public class AccompanimentActivity extends Activity {
                                         if(filename.equals(""))
                                             filename = fomatter.format(currentTime);
                                         saveFile(filename);
-                                        ((Activity)mContext).finish();
+                                        Intent intent = new Intent((Activity)mContext, MainActivity.class);
+                                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                        startActivity(intent);
                                     }
                                 })
                                 .setNegativeButton("저장하지 않음", new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialogInterface, int i) {
                                         //To change body of implemented methods use File | Settings | File Templates.
-                                        ((Activity)mContext).finish();
+                                        Intent intent = new Intent((Activity)mContext, MainActivity.class);
+                                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                        startActivity(intent);
                                     }
                                 });
                         builder.show();
@@ -228,7 +232,7 @@ public class AccompanimentActivity extends Activity {
                 TextureCache.getInstance().addTexture("screen_mint", new Texture(gl, mContext, mContext.getResources().getIdentifier("touchscreen_mint", "drawable", mContext.getPackageName())));
                 TextureCache.getInstance().addTexture("screen_white", new Texture(gl, mContext, mContext.getResources().getIdentifier("touchscreen_white", "drawable", mContext.getPackageName())));
 
-                for(int i=0; i<6; i++) {
+                for(int i=0; i<10; i++) {
                     if(i%2 == 0)
                         sprite[i] = new ScreenSprite(TextureCache.getInstance().getTexture("screen_mint"));
                     else
@@ -264,44 +268,14 @@ public class AccompanimentActivity extends Activity {
             }
 
             @Override
-            public boolean onTouchEvent(MotionEvent event) {
-
-                this.event = event;
-
-                if(beatSequenceIdx/beatSequence.length < 1)
-                    return false;
-
-                touchPoint = new PointF(event.getX(), this.windowHeight - event.getY());
-
-                switch(event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        isTouching = true;
-
-                        TouchSprite sprite = new TouchSprite();
-                        sprite.setPosition(touchPoint.x, touchPoint.y);
-                        spriteBundle.addSprite(sprite);
-                        break;
-                    case MotionEvent.ACTION_MOVE:
-                        break;
-                    case MotionEvent.ACTION_UP:
-                        isTouching = false;
-                        break;
-                    default:
-                        break;
-                }
-
-                return false;
-            }
-
-            @Override
             public void update(float dt) {
                 //To change body of implemented methods use File | Settings | File Templates.
                 spriteBundle.update(dt);
 
-                for(int i=0; i<6; i++) {
+                for(int i=0; i<10; i++) {
                     if(i < codeSequence.length) {
                         sprite[i].setIsVisible(true);
-                        sprite[i].setScale(sprite[i].getScale().x, (windowHeight / codeSequence.length) / 100.0f);
+                        sprite[i].setScale(1.0f, (windowHeight / codeSequence.length) / 100.0f);
                         sprite[i].setPosition(0.0f, windowHeight / codeSequence.length * i);
                     } else {
                         sprite[i].setIsVisible(false);
@@ -317,12 +291,12 @@ public class AccompanimentActivity extends Activity {
                                     if(!bePlaySoundList.isEmpty())
                                         bePlaySoundList.clear();
                                     if(bePlayingSoundList.isEmpty())
-                                        bePlaySoundList.add(new Sound(ChordReference.melodyList2[codeSequence[codeSequence.length - 1 - i]]));
+                                        bePlaySoundList.add(new Sound(ChordReference.melodyList2[codeSequence[i]]));
                                 }
                             }
                         }
 
-                        if(event.getAction() != MotionEvent.ACTION_DOWN) {
+                        if(event.getAction() == MotionEvent.ACTION_UP) {
                             ArrayList<Sound> removeList = new ArrayList<Sound>();
                             for(Sound sound : bePlayingSoundList) {
                                 if(!playEndSoundList.contains(sound)) {
@@ -335,10 +309,8 @@ public class AccompanimentActivity extends Activity {
                     }
                 }
 
-                if(bpmTimer >= (60.0f/bpm)/8) { // 60.0f / bpm -> 1박자마다 들어가는 루프. /8이 붙으면 반의 반박자마다
+                if(bpmTimer >= 1.0f/16.0f) { // /16이 반의 반박자마다 들어가는 코드다.
                     bpmTimer = 0.0f;
-
-                    codeSequence = ChordReference.redPackage[(beatSequenceIdx/beatSequence.length)%ChordReference.redPackage.length];
 
                     soundPool.play(soundFileTable.get(ChordReference.beatList[beatSequence[beatSequenceIdx % beatSequence.length]]), 1, 1, 0, 0, 1);
 
@@ -354,6 +326,7 @@ public class AccompanimentActivity extends Activity {
                         thread.stopThread();
                     }
 
+                    codeSequence = ChordReference.redPackage[((beatSequenceIdx+1)/beatSequence.length-1)%ChordReference.redPackage.length];
 
                     if(beatSequenceIdx%2 == 0) { // 반박자마다 들어감
                         // melody Sequence
@@ -372,7 +345,7 @@ public class AccompanimentActivity extends Activity {
                         {
                             ArrayList<Sound> removeList = new ArrayList<Sound>();
                             for(Sound sound : bePlayingSoundList) {
-                                if(sound.beatTerm < 4) {
+                                if(sound.beatTerm < 8) {
                                     sound.beatTerm++;
                                 } else {
                                     if(!playEndSoundList.contains(sound)) {
@@ -388,24 +361,56 @@ public class AccompanimentActivity extends Activity {
                             ArrayList<Sound> removeList = new ArrayList<Sound>();
                             for(Sound sound : playEndSoundList) {
                                 if(sound.volume > 0.0f) {
+                                    if(sound.volume >= 1.0f) {
+                                        String[] str = record.split(" ");
+                                        record = "";
+                                        for(int i=0; i<str.length-sound.beatTerm; i++) {
+                                            record += str[i] + " ";
+                                        }
+                                        record += sound.refName.replace("_", "") + "_" + sound.beatTerm + " ";
+                                    }
                                     sound.volume -= 0.24f;
                                     soundPool.setVolume(sound.streamId, sound.volume, sound.volume);
                                 } else {
-                                    record += sound.refName.replace("_", "") + "_" + sound.beatTerm + " ";
                                     soundPool.stop(sound.streamId);
                                     removeList.add(sound);
                                 }
                             }
-                            if(playEndSoundList.isEmpty()) {
-                                record += "R" + " ";
-                            }
                             playEndSoundList.removeAll(removeList);
                         }
-
+                        record += "R" + " ";
                     }
                     beatSequenceIdx++;
                 }
                 bpmTimer += dt;
+            }
+
+            @Override
+            public boolean onTouchEvent(MotionEvent event) {
+                this.event = event;
+                touchPoint = new PointF(event.getX(), this.windowHeight - event.getY());
+
+                if(beatSequenceIdx/beatSequence.length < 1)
+                    return false;
+
+                switch(event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        isTouching = true;
+
+                        //TouchSprite sprite = new TouchSprite();
+                        //sprite.setPosition(touchPoint.x, touchPoint.y);
+                        //spriteBundle.addSprite(sprite);
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        isTouching = false;
+                        break;
+                    default:
+                        break;
+                }
+
+                return false;
             }
 
             public void saveFile(String filename) {
@@ -428,7 +433,7 @@ public class AccompanimentActivity extends Activity {
                 ts.setTimeSignature(4, 4, TimeSignature.DEFAULT_METER, TimeSignature.DEFAULT_DIVISION);
 
                 Tempo t = new Tempo();
-                t.setBpm((int)bpm);
+                t.setBpm(120);
 
                 tempoTrack.insertEvent(ts);
                 tempoTrack.insertEvent(t);
@@ -479,6 +484,7 @@ public class AccompanimentActivity extends Activity {
                         pitch = pitch + 12 * ((int)str.charAt(1) - '0');
                         length = (int)str.charAt(3) - '0';
                     }
+                    length *= 2;
 
                     noteTrack.insertNote(channel, pitch, velocity, everyAllLength, length * 120); // 240이면 1박자
                     everyAllLength = everyAllLength + length * 120;

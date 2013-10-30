@@ -241,6 +241,12 @@ public class MelodyListActivity extends Activity {
                                             melodyList.get(which).Name = afterText;
 
                                             mDbOpenHelper.updateMelodyColumn(melodyList.get(which).Id, melodyList.get(which).Name, melodyList.get(which).originRecord, Melody.StringListToString(melodyList.get(which).accompanimentRecordList));
+                                            String ext = Environment.getExternalStorageState();
+                                            if(ext.equals(Environment.MEDIA_MOUNTED)) {
+                                                findFolder();
+                                            } else {
+                                            }
+                                            melodyAdapter.notifyDataSetChanged();
                                         }
                                     })
                                     .setNegativeButton("취소", null);
