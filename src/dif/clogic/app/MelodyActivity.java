@@ -337,7 +337,7 @@ public class MelodyActivity extends Activity {
                                 if(!bePlaySoundList.isEmpty())
                                     bePlaySoundList.clear();
                                 if(bePlayingSoundList.isEmpty())
-                                    bePlaySoundList.add(new Sound(ChordReference.melodyList2[codeSequence[codeSequence.length - 1 - i]]));
+                                    bePlaySoundList.add(new Sound(ChordReference.melodyList2[codeSequence[i]]));
                             }
                         }
                     }
@@ -355,10 +355,8 @@ public class MelodyActivity extends Activity {
                 }
             }
 
-            if(bpmTimer >= 1.0f/16) { // 60.0f / bpm -> 1박자마다 들어가는 루프. /8이 붙으면 반의 반박자마다
+            if(bpmTimer >= 2.0f/16) { // 60.0f / bpm -> 1박자마다 들어가는 루프. /8이 붙으면 반의 반박자마다
                 bpmTimer = 0.0f;
-
-                codeSequence = ChordReference.redPackage[(beatSequenceIdx/beatSequence.length)%ChordReference.redPackage.length];
 
                 soundPool.play(soundFileTable.get(ChordReference.beatList[beatSequence[beatSequenceIdx % beatSequence.length]]), 1, 1, 0, 0, 1);
 
@@ -368,6 +366,8 @@ public class MelodyActivity extends Activity {
                 } else {
                     beatSequence = ChordReference.beat1;
                 }
+
+                codeSequence = ChordReference.redPackage[((beatSequenceIdx+1)/beatSequence.length-1)%ChordReference.redPackage.length];
 
                 if(beatSequenceIdx%2 == 0) { // 반박자마다 들어감
                     // melody Sequence
@@ -549,8 +549,8 @@ public class MelodyActivity extends Activity {
                 if (str.length() > 1) {
                     pitch = pitch + 12 * ((int)str.charAt(1) - '0');
                     length = (int)str.charAt(3) - '0';
-                    length *= 2;
                 }
+                length *= 2;
 
                 noteTrack.insertNote(channel, pitch, velocity, melodyLength, length * 120); // 120에 반박자
 
@@ -561,7 +561,7 @@ public class MelodyActivity extends Activity {
             // 아래는 Accompaniment 구현 후에.
             // 이 코드에 파일 불러와 MidiEvent(ProgramChange)만 입히면 됨.
             for(int i=0; i<recordList.size(); i++) {
-                MidiTrack accompanimentTrack = new MidiTrack();
+                //MidiTrack accompanimentTrack = new MidiTrack();
                 File file = new File(filenameList.get(i));
 
                 MidiFile mFile = null;
@@ -577,11 +577,17 @@ public class MelodyActivity extends Activity {
 
                 String[] instruments = getResources().getStringArray(R.array.instruments);
 
+                int channel = i+1;
+                int pitch = 0;
+                int velocity = 80;
+
                 Iterator<MidiEvent> it = fileTrack.getEvents().iterator();
                 while(it.hasNext()) {
                     ChannelEvent event = (ChannelEvent) it.next();
-                    if(event.getType() == ChannelEvent.PROGRAM_CHANGE)
-                        accompanimentTrack.insertEvent(event);
+                    if(event.getType() == ChannelEvent.PROGRAM_CHANGE) {
+                        event.setChannel(channel);
+                        noteTrack.insertEvent(event);
+                    }
                 }
 
                 int idx = 0;
@@ -589,9 +595,6 @@ public class MelodyActivity extends Activity {
                 while(everyAllLength < melodyLength) {
                     String[] chip = recordList.get(i).split(" ");
                     String str = chip[idx%chip.length];
-                    int channel = i+1;
-                    int pitch = 0;
-                    int velocity = 80;
 
                     switch(str.charAt(0)) {
                         case 'c':
@@ -635,11 +638,11 @@ public class MelodyActivity extends Activity {
                     if(everyAllLength + length * 120 > melodyLength)
                         length = 1920;
 
-                    accompanimentTrack.insertNote(channel, pitch, velocity, everyAllLength, length * 120); // 120은 반의반박자
+                    noteTrack.insertNote(channel, pitch, velocity, everyAllLength, length * 120); // 120은 반의반박자
                     everyAllLength = everyAllLength + length * 120;
                     idx++;
                 }
-                tracks.add(accompanimentTrack);
+                //tracks.add(accompanimentTrack);
             }
 
             MidiFile midi = new MidiFile(MidiFile.DEFAULT_RESOLUTION, tracks);

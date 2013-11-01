@@ -188,10 +188,13 @@ public class MelodyListActivity extends Activity {
 
                                     Iterator<MidiEvent> it = t.getEvents().iterator();
                                     ArrayList<MidiEvent> removeProgramChange = new ArrayList<MidiEvent>();
+                                    int tick = 0;
                                     while(it.hasNext()) {
                                         ChannelEvent event = (ChannelEvent) it.next();
-                                        if(event.getType() == ChannelEvent.PROGRAM_CHANGE)
-                                            removeProgramChange.add(event);
+                                        if(event.getType() == ChannelEvent.PROGRAM_CHANGE) {
+                                            if(event.getChannel() == 0)
+                                                removeProgramChange.add(event);
+                                        }
                                     }
 
                                     for(MidiEvent e : removeProgramChange) {

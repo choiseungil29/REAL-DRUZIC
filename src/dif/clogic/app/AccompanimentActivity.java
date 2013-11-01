@@ -309,7 +309,7 @@ public class AccompanimentActivity extends Activity {
                     }
                 }
 
-                if(bpmTimer >= 1.0f/16.0f) { // /16이 반의 반박자마다 들어가는 코드다.
+                if(bpmTimer >= 2.0f/16.0f) { // /16이 반의 반박자마다 들어가는 코드다.
                     bpmTimer = 0.0f;
 
                     soundPool.play(soundFileTable.get(ChordReference.beatList[beatSequence[beatSequenceIdx % beatSequence.length]]), 1, 1, 0, 0, 1);
